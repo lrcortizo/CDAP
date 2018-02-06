@@ -1,0 +1,86 @@
+Number of objects: 3
+
+***** ITERATION 0 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 2609.56, 35785999.69
+New position of object 2: -2609.56, -35785999.69
+***** ITERATION 5000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 12564062.32, 31882405.24
+New position of object 2: -12564062.32, -31882405.24
+***** ITERATION 10000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 21850678.96, 20101924.05
+New position of object 2: -21850678.96, -20101924.05
+***** ITERATION 15000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 22274086.87, 1083004.63
+New position of object 2: -22274086.87, -1083004.63
+***** ITERATION 20000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 3451901.28, -15483576.51
+New position of object 2: -3451901.28, 15483576.51
+***** ITERATION 25000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -19991165.10, -3895912.59
+New position of object 2: 19991165.10, 3895912.59
+***** ITERATION 30000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -23050597.24, 16212038.97
+New position of object 2: 23050597.24, -16212038.97
+***** ITERATION 35000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -15184365.16, 29829809.62
+New position of object 2: 15184365.16, -29829809.62
+***** ITERATION 40000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -3059467.84, 35571390.49
+New position of object 2: 3059467.84, -35571390.49
+***** ITERATION 45000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 9767044.92, 33504521.30
+New position of object 2: -9767044.92, -33504521.30
+***** ITERATION 50000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 20188529.23, 23581335.80
+New position of object 2: -20188529.23, -23581335.80
+***** ITERATION 55000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 23460695.90, 6034232.03
+New position of object 2: -23460695.90, -6034232.03
+***** ITERATION 60000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 9925782.89, -13397752.82
+New position of object 2: -9925782.89, 13397752.82
+***** ITERATION 65000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -16404039.88, -8620555.41
+New position of object 2: 16404039.88, 8620555.41
+***** ITERATION 70000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -23682791.54, 11914626.53
+New position of object 2: 23682791.54, -11914626.53
+***** ITERATION 75000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -17585507.34, 27334260.10
+New position of object 2: 17585507.34, -27334260.10
+***** ITERATION 80000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: -6084410.58, 34926047.94
+New position of object 2: 6084410.58, -34926047.94
+***** ITERATION 85000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 6843079.86, 34692304.05
+New position of object 2: -6843079.86, -34692304.05
+***** ITERATION 90000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 18153272.88, 26626994.06
+New position of object 2: -18153272.88, -26626994.06
+***** ITERATION 95000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 23735625.40, 10758078.81
+New position of object 2: -23735625.40, -10758078.81
+***** ITERATION 100000 *****
+New position of object 0: 0.00, 0.00
+New position of object 1: 15260383.27, -9730611.62
+New position of object 2: -15260383.27, 9730611.62
