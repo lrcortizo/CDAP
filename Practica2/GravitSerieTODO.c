@@ -67,11 +67,11 @@ void main(){
                 if (i==j)
                     continue;
 
-                double d = // TODO
-                double f = // TODO
-                double fx = // TODO
+                double d = sqrt((x[j]-x[i])*(x[j]-x[i])+(y[j]-y[i])*(y[j]-y[i]));
+                double f = G*((m[j]*m[i])/(d*d));
+                double fx = f*((x[j]-x[i])/d)
                 double ax = // TODO
-                double fy = // TODO
+                double fy = f*((y[j]-y[i])/d)
                 double ay = // TODO
 
                 if (showData && verbose) {
@@ -87,7 +87,7 @@ void main(){
                 ay_total += ay;
 
             }
-            
+
             vx_new[i] += ax_total;
             vy_new[i] += ay_total;
 
