@@ -13,7 +13,7 @@
 #define NUM_ITER_SHOW 5000
 #define verbose false
 
-void main(){
+void main(int argc, char* argv[]){
     char  str[MAX_CHAR];
     FILE *file;
     int noOfObjects;
