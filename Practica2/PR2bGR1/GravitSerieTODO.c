@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include "mpi.h"
+
 #define MAX_CHAR 100
 #define MAX_OBJECTS 10
 #define DATAFILE "data.txt"
@@ -15,9 +17,20 @@ void main(){
     char  str[MAX_CHAR];
     FILE *file;
     int noOfObjects;
-    double x[MAX_OBJECTS], y[MAX_OBJECTS], vx[MAX_OBJECTS], vy[MAX_OBJECTS], m[MAX_OBJECTS];
-    double x_new[MAX_OBJECTS], y_new[MAX_OBJECTS], vx_new[MAX_OBJECTS], vy_new[MAX_OBJECTS];
+    double x, y, vx, vy, m;
+    double x_new, y_new, vx_new, vy_new;
     int i,j;
+
+    int my_rank;
+    int p;
+    int source; int dest;
+    int tag=0;
+    char message[100];
+
+    MPI_Status status;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &p);
 
     file = fopen( DATAFILE , "r");
     fscanf(file,"%s",str);
@@ -30,26 +43,53 @@ void main(){
 
     printf("\n");
 
-    for (i=0; i< noOfObjects; i++) {
+    if(my_rank == 0)
+    {
         fscanf(file,"%s",str);
-        x[i] = atof(str);
+        x = atof(str);
         fscanf(file,"%s",str);
-        y[i] = atof(str);
+        y = atof(str);
         fscanf(file,"%s",str);
-        vx[i] = atof(str);
+        vx = atof(str);
         fscanf(file,"%s",str);
-        vy[i] = atof(str);
+        vy = atof(str);
         fscanf(file,"%s",str);
-        m[i] = atof(str);
+        m = atof(str);
+
+        for (i=1; i< noOfObjects; i++) {
+            fscanf(file,"%s",str);
+            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,0,MPI_COMM_WORLD); //x
+            fscanf(file,"%s",str);
+            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,1,MPI_COMM_WORLD); //y
+            fscanf(file,"%s",str);
+            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,2,MPI_COMM_WORLD); //vx
+            fscanf(file,"%s",str);
+            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,3,MPI_COMM_WORLD); //vy
+            fscanf(file,"%s",str);
+            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,4,MPI_COMM_WORLD); //m
+        }
+    }
+    else
+    {
+        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,&status);
+        x = atof(str);
+        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+        y = atof(str);
+        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&status);
+        vx = atof(str);
+        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,3,MPI_COMM_WORLD,&status);
+        vy = atof(str);
+        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,4,MPI_COMM_WORLD,&status);
+        m = atof(str);
     }
 
     for (int niter=0; niter<NUM_ITER; niter++) {
 
         for (i=0; i< noOfObjects; i++) {
-            x_new[i]=x[i];
-            y_new[i]=y[i];
-            vx_new[i]=vx[i];
-            vy_new[i]=vy[i];
+            x_new=x;
+            y_new=y;
+            vx_new=vx;
+            vy_new=vy;
         }
 
         _Bool showData = false;
@@ -99,12 +139,11 @@ void main(){
         }  // noOfObjects
 
         for (i=0; i< noOfObjects; i++) {
-            x[i]=x_new[i];
-            y[i]=y_new[i];
-            vx[i]=vx_new[i];
-            vy[i]=vy_new[i];
+            x=x_new;
+            y=y_new;
+            vx=vx_new;
+            vy=vy_new;
         }
 
     }  // nIter
-
 }  // main
