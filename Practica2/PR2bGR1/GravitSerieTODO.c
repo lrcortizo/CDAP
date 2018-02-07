@@ -17,6 +17,7 @@ void main(){
     char  str[MAX_CHAR];
     FILE *file;
     int noOfObjects;
+    double x_other[MAX_OBJECTS-1], y_other[MAX_OBJECTS-1], vx_other[MAX_OBJECTS-1], vy_other[MAX_OBJECTS-1], m_other[MAX_OBJECTS-1];
     double x, y, vx, vy, m;
     double x_new, y_new, vx_new, vy_new;
     int i,j;
@@ -92,6 +93,13 @@ void main(){
             vy_new=vy;
         }
 
+        // Gather all data down to all the processes
+        MPI_Allgather(x, noOfObjects, MPI_FLOAT, &x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(y, noOfObjects, MPI_FLOAT, &y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(vx, noOfObjects, MPI_FLOAT, &vx_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(vy, noOfObjects, MPI_FLOAT, &vy_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(m, noOfObjects, MPI_FLOAT, &m_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+
         _Bool showData = false;
 
         if (niter % NUM_ITER_SHOW == 0)
@@ -100,27 +108,27 @@ void main(){
         if (showData)
             printf("***** ITERATION %d *****\n",niter);
 
-        for (i=0; i< noOfObjects; i++) {
+        //for (i=0; i< noOfObjects; i++) {
             double ax_total=0;
             double ay_total=0;
-            for (j=0; j < noOfObjects; j++) {
-                if (i==j)
+            for (j=0; j < noOfObjects-1; j++) {
+                if (my_rank==j)
                     continue;
 
-                double d = sqrt(fabs((x[j]-x[i]) * (x[j]-x[i]) + (y[j]-y[i]) * (y[j]-y[i])));
-                double f = G * ((m[j]*m[i])/(d*d));
-                double fx = f * ((x[j]-x[i])/d);
-                double ax = fx / m[i];
-                double fy = f * ((y[j]-y[i])/d);
-                double ay = fy / m[i];
+                double d = sqrt(fabs((x_other[j]-x) * (x_other[j]-x) + (y_other[j]-y) * (y_other[j]-y)));
+                double f = G * ((m_other[j]*m)/(d*d));
+                double fx = f * ((x_other[j]-x)/d);
+                double ax = fx / m;
+                double fy = f * ((y_other[j]-y)/d);
+                double ay = fy / m;
 
                 if (showData && verbose) {
-                    printf("  Distance between objects %d and %d: %f m\n",i+1,j+1,d);
-                    printf("  Force between objects %d and %d: %f N*m²/kg²\n",i+1,j+1,f);
-                    printf("  Force along x axis on object %d made by object %d: %f N*m²/kg²\n",i+1,j+1,fx);
-                    printf("  Acceleration along x axis on object %d made by object %d: %f m/s²\n",i+1,j+1,ax);
-                    printf("  Force along y axis on object %d made by object %d: %f N*m²/kg²\n",i+1,j+1,fy);
-                    printf("  Acceleration along y axis on object %d made by object %d: %f m/s²\n",i+1,j+1,ay);
+                    printf("  Distance between objects %d and %d: %f m\n",my_rank+1,j+1,d);
+                    printf("  Force between objects %d and %d: %f N*m²/kg²\n",my_rank+1,j+1,f);
+                    printf("  Force along x axis on object %d made by object %d: %f N*m²/kg²\n",my_rank+1,j+1,fx);
+                    printf("  Acceleration along x axis on object %d made by object %d: %f m/s²\n",my_rank+1,j+1,ax);
+                    printf("  Force along y axis on object %d made by object %d: %f N*m²/kg²\n",my_rank+1,j+1,fy);
+                    printf("  Acceleration along y axis on object %d made by object %d: %f m/s²\n",my_rank+1,j+1,ay);
                 }
 
                 ax_total += ax;
@@ -128,15 +136,15 @@ void main(){
 
             }
 
-            vx_new[i] += ax_total;
-            vy_new[i] += ay_total;
+            vx_new += ax_total;
+            vy_new += ay_total;
 
-            x_new[i] += vx_new[i];
-            y_new[i] += vy_new[i];
+            x_new += vx_new;
+            y_new += vy_new;
             if (showData)
-                printf("New position of object %d: %.2f, %.2f\n",i,x_new[i],y_new[i]);
+                printf("New position of object %d: %.2f, %.2f\n",i,x_new,y_new);
 
-        }  // noOfObjects
+        //}  // noOfObjects
 
         for (i=0; i< noOfObjects; i++) {
             x=x_new;
