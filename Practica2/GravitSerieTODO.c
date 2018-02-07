@@ -67,12 +67,12 @@ void main(){
                 if (i==j)
                     continue;
 
-                double d = sqrt((x[j]-x[i])*(x[j]-x[i])+(y[j]-y[i])*(y[j]-y[i]));
-                double f = G*((m[j]*m[i])/(d*d));
-                double fx = f*((x[j]-x[i])/d)
-                double ax = // TODO
-                double fy = f*((y[j]-y[i])/d)
-                double ay = // TODO
+                double d = sqrt(fabs((x[j]-x[i]) * (x[j]-x[i]) + (y[j]-y[i]) * (y[j]-y[i])));
+                double f = G * ((m[j]*m[i])/(d*d));
+                double fx = f * ((x[j]-x[i])/d);
+                double ax = fx / m[i];
+                double fy = f * ((y[j]-y[i])/d);
+                double ay = fy / m[i];
 
                 if (showData && verbose) {
                     printf("  Distance between objects %d and %d: %f m\n",i+1,j+1,d);
