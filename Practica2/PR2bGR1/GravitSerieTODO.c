@@ -19,7 +19,8 @@ void main(int argc, char* argv[]){
     int noOfObjects;
     double x_other[MAX_OBJECTS-1], y_other[MAX_OBJECTS-1], vx_other[MAX_OBJECTS-1], vy_other[MAX_OBJECTS-1], m_other[MAX_OBJECTS-1];
     double x, y, vx, vy, m;
-    double x_new, y_new, vx_new, vy_new;
+	double x_new, y_new, vx_new, vy_new;
+    double temp;
     int i,j;
 
     int my_rank;
@@ -58,31 +59,32 @@ void main(int argc, char* argv[]){
         m = atof(str);
 
         for (i=1; i< noOfObjects; i++) {
-            fscanf(file,"%s",str);
-            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,0,MPI_COMM_WORLD); //x
-            fscanf(file,"%s",str);
-            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,1,MPI_COMM_WORLD); //y
-            fscanf(file,"%s",str);
-            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,2,MPI_COMM_WORLD); //vx
-            fscanf(file,"%s",str);
-            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,3,MPI_COMM_WORLD); //vy
-            fscanf(file,"%s",str);
-            MPI_Send(str,strlen(str)+1,MPI_CHAR,i,4,MPI_COMM_WORLD); //m
+			fscanf(file,"%s",str);
+			temp = atof(str);
+            MPI_Send(&temp,100,MPI_FLOAT,i,0,MPI_COMM_WORLD); //x
+			fscanf(file,"%s",str);
+			temp = atof(str);
+            MPI_Send(&temp,100,MPI_FLOAT,i,1,MPI_COMM_WORLD); //y
+			fscanf(file,"%s",str);
+			temp = atof(str);
+            MPI_Send(&temp,100,MPI_FLOAT,i,2,MPI_COMM_WORLD); //vx
+			fscanf(file,"%s",str);
+			temp = atof(str);
+            MPI_Send(&temp,100,MPI_FLOAT,i,3,MPI_COMM_WORLD); //vy
+			fscanf(file,"%s",str);
+			temp = atof(str);
+            MPI_Send(&temp,100,MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
         }
     }
     else
     {
-        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,&status);
-        x = atof(str);
-        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
-        y = atof(str);
-        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&status);
-        vx = atof(str);
-        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,3,MPI_COMM_WORLD,&status);
-        vy = atof(str);
-        MPI_Recv(str,100,MPI_CHAR,MPI_ANY_SOURCE,4,MPI_COMM_WORLD,&status);
-        m = atof(str);
+        MPI_Recv(&x,100,MPI_FLOAT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,&status);
+        MPI_Recv(&y,100,MPI_FLOAT,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vx,100,MPI_FLOAT,MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vy,100,MPI_FLOAT,MPI_ANY_SOURCE,3,MPI_COMM_WORLD,&status);
+        MPI_Recv(&m,100,MPI_FLOAT,MPI_ANY_SOURCE,4,MPI_COMM_WORLD,&status);
     }
+	printf("Origina Values for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
 
     for (int niter=0; niter<NUM_ITER; niter++) {
 
@@ -94,19 +96,19 @@ void main(int argc, char* argv[]){
         }
 
         // Gather all data down to all the processes
-        MPI_Allgather(x, noOfObjects, MPI_FLOAT, &x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(y, noOfObjects, MPI_FLOAT, &y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(vx, noOfObjects, MPI_FLOAT, &vx_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(vy, noOfObjects, MPI_FLOAT, &vy_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(m, noOfObjects, MPI_FLOAT, &m_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(&x, noOfObjects, MPI_FLOAT, &x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(&y, noOfObjects, MPI_FLOAT, &y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(&vx, noOfObjects, MPI_FLOAT, &vx_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(&vy, noOfObjects, MPI_FLOAT, &vy_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        MPI_Allgather(&m, noOfObjects, MPI_FLOAT, &m_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
 
         _Bool showData = false;
 
         if (niter % NUM_ITER_SHOW == 0)
             showData = true;
 
-        if (showData)
-            printf("***** ITERATION %d *****\n",niter);
+        //if (showData)
+        //    printf("***** ITERATION %d *****\n",niter);
 
         //for (i=0; i< noOfObjects; i++) {
             double ax_total=0;
@@ -142,7 +144,7 @@ void main(int argc, char* argv[]){
             x_new += vx_new;
             y_new += vy_new;
             if (showData)
-                printf("New position of object %d: %.2f, %.2f\n",i,x_new,y_new);
+                //printf("New position of object %d: %.2f, %.2f\n",i,x_new,y_new);
 
         //}  // noOfObjects
 
