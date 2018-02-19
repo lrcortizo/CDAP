@@ -11,7 +11,7 @@
 #define G 6.674e-11
 #define NUM_ITER 100001
 #define NUM_ITER_SHOW 5000
-#define verbose false
+#define verbose true
 
 void main(int argc, char* argv[]){
     char  str[MAX_CHAR];
@@ -61,40 +61,40 @@ void main(int argc, char* argv[]){
         for (i=1; i< noOfObjects; i++) {
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,100,MPI_FLOAT,i,0,MPI_COMM_WORLD); //x
+            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,0,MPI_COMM_WORLD); //x
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,100,MPI_FLOAT,i,1,MPI_COMM_WORLD); //y
+            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,1,MPI_COMM_WORLD); //y
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,100,MPI_FLOAT,i,2,MPI_COMM_WORLD); //vx
+            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,2,MPI_COMM_WORLD); //vx
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,100,MPI_FLOAT,i,3,MPI_COMM_WORLD); //vy
+            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,3,MPI_COMM_WORLD); //vy
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,100,MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
+            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
         }
     }
     else
     {
-        MPI_Recv(&x,100,MPI_FLOAT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,&status);
-        MPI_Recv(&y,100,MPI_FLOAT,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
-        MPI_Recv(&vx,100,MPI_FLOAT,MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&status);
-        MPI_Recv(&vy,100,MPI_FLOAT,MPI_ANY_SOURCE,3,MPI_COMM_WORLD,&status);
-        MPI_Recv(&m,100,MPI_FLOAT,MPI_ANY_SOURCE,4,MPI_COMM_WORLD,&status);
+        MPI_Recv(&x,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,&status);
+        MPI_Recv(&y,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vx,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vy,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,3,MPI_COMM_WORLD,&status);
+        MPI_Recv(&m,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,4,MPI_COMM_WORLD,&status);
     }
-	printf("Origina Values for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
+	printf("Starting Values for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
 
-    for (int niter=0; niter<NUM_ITER; niter++) {
+    for (int niter=0; niter<5; niter++) {
 
-        for (i=0; i< noOfObjects; i++) {
+        //for (i=0; i< noOfObjects; i++) {
             x_new=x;
             y_new=y;
             vx_new=vx;
             vy_new=vy;
-        }
-
+        //}
+		printf("Starting Values NEW for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x_new,y_new,vx_new,vy_new,m);
         // Gather all data down to all the processes
         MPI_Allgather(&x, noOfObjects, MPI_FLOAT, &x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
         MPI_Allgather(&y, noOfObjects, MPI_FLOAT, &y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
@@ -144,7 +144,7 @@ void main(int argc, char* argv[]){
             x_new += vx_new;
             y_new += vy_new;
             if (showData)
-                //printf("New position of object %d: %.2f, %.2f\n",i,x_new,y_new);
+                printf("New position of object %d: %.2f, %.2f\n",i,x_new,y_new);
 
         //}  // noOfObjects
 
