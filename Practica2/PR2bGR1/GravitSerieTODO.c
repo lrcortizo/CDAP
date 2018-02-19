@@ -156,4 +156,5 @@ void main(int argc, char* argv[]){
         }
 
     }  // nIter
+    MPI_Finalize();
 }  // main
