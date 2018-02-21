@@ -11,17 +11,17 @@
 #define G 6.674e-11
 #define NUM_ITER 100001
 #define NUM_ITER_SHOW 5000
-#define verbose true
+#define verbose false
 
 void main(int argc, char* argv[]){
     char  str[MAX_CHAR];
     FILE *file;
     int noOfObjects;
-    double x_other[MAX_OBJECTS-1], y_other[MAX_OBJECTS-1], vx_other[MAX_OBJECTS-1], vy_other[MAX_OBJECTS-1], m_other[MAX_OBJECTS-1];
+    double x_other, y_other, vx_other, vy_other, m_other;
     double x, y, vx, vy, m;
 	double x_new, y_new, vx_new, vy_new;
     double temp;
-    int i,j;
+    int i,j,k;
 
     int my_rank;
     int p;
@@ -61,33 +61,32 @@ void main(int argc, char* argv[]){
         for (i=1; i< noOfObjects; i++) {
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,0,MPI_COMM_WORLD); //x
+            MPI_Send(&temp,1,MPI_DOUBLE,i,0,MPI_COMM_WORLD); //x
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,1,MPI_COMM_WORLD); //y
+            MPI_Send(&temp,1,MPI_DOUBLE,i,1,MPI_COMM_WORLD); //y
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,2,MPI_COMM_WORLD); //vx
+            MPI_Send(&temp,1,MPI_DOUBLE,i,2,MPI_COMM_WORLD); //vx
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,3,MPI_COMM_WORLD); //vy
+            MPI_Send(&temp,1,MPI_DOUBLE,i,3,MPI_COMM_WORLD); //vy
 			fscanf(file,"%s",str);
 			temp = atof(str);
-            MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
+            MPI_Send(&temp,1,MPI_DOUBLE,i,4,MPI_COMM_WORLD); //m
         }
     }
 
     else
     {
-        MPI_Recv(&x,sizeof(double),MPI_FLOAT,0,0,MPI_COMM_WORLD,&status);
-        MPI_Recv(&y,sizeof(double),MPI_FLOAT,0,1,MPI_COMM_WORLD,&status);
-        MPI_Recv(&vx,sizeof(double),MPI_FLOAT,0,2,MPI_COMM_WORLD,&status);
-        MPI_Recv(&vy,sizeof(double),MPI_FLOAT,0,3,MPI_COMM_WORLD,&status);
-        MPI_Recv(&m,sizeof(double),MPI_FLOAT,0,4,MPI_COMM_WORLD,&status);
+        MPI_Recv(&x,1,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&status);
+        MPI_Recv(&y,1,MPI_DOUBLE,0,1,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vx,1,MPI_DOUBLE,0,2,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vy,1,MPI_DOUBLE,0,3,MPI_COMM_WORLD,&status);
+        MPI_Recv(&m,1,MPI_DOUBLE,0,4,MPI_COMM_WORLD,&status);
     }
-	printf("Starting Values for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
 
-    for (int niter=0; niter<1; niter++) {
+    for (int niter=0; niter<NUM_ITER; niter++) {
 
         //for (i=0; i< noOfObjects; i++) {
             x_new=x;
@@ -95,30 +94,42 @@ void main(int argc, char* argv[]){
             vx_new=vx;
             vy_new=vy;
         //}
-        printf("Received values OLD for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
-		printf("Received values NEW for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x_new,y_new,vx_new,vy_new,m);
 
 
         // Gather all data down to all the processes
-        //MPI_Allgather(&x, noOfObjects, MPI_FLOAT, x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        //MPI_Allgather(&y, noOfObjects, MPI_FLOAT, y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        //MPI_Allgather(&vx, noOfObjects, MPI_FLOAT, vx_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        //MPI_Allgather(&vy, noOfObjects, MPI_FLOAT, vy_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        //MPI_Allgather(&m, noOfObjects, MPI_FLOAT, m_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        //MPI_Allgather(&x, noOfObjects, MPI_DOUBLE, x_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
+        //MPI_Allgather(&y, noOfObjects, MPI_DOUBLE, y_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
+        //MPI_Allgather(&vx, noOfObjects, MPI_DOUBLE, vx_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
+        //MPI_Allgather(&vy, noOfObjects, MPI_DOUBLE, vy_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
+        //MPI_Allgather(&m, noOfObjects, MPI_DOUBLE, m_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
 
-        for(j=0; j<noOfObjects-1; j++){
-            if (my_rank==j)
+        // for(i=0; i<noOfObjects; i++){
+        //     k=i+1;
+        //     MPI_Recv(&x_other[i],1,MPI_DOUBLE,i,0,MPI_COMM_WORLD,&status);
+        //     MPI_Recv(&y_other[i],1,MPI_DOUBLE,i,1,MPI_COMM_WORLD,&status);
+        //     MPI_Recv(&vx_other[i],1,MPI_DOUBLE,i,2,MPI_COMM_WORLD,&status);
+        //     MPI_Recv(&vy_other[i],1,MPI_DOUBLE,i,3,MPI_COMM_WORLD,&status);
+        //     MPI_Recv(&m_other[i],1,MPI_DOUBLE,i,4,MPI_COMM_WORLD,&status);
+        //
+        //     if(k == noOfObjects)
+        //         k = 0;
+        //     MPI_Send(&x,1,MPI_DOUBLE,k,0,MPI_COMM_WORLD); //x
+        //     MPI_Send(&y,1,MPI_DOUBLE,k,1,MPI_COMM_WORLD); //y
+        //     MPI_Send(&vx,1,MPI_DOUBLE,k,2,MPI_COMM_WORLD); //vx
+        //     MPI_Send(&vy,1,MPI_DOUBLE,k,3,MPI_COMM_WORLD); //vy
+        //     MPI_Send(&m,1,MPI_DOUBLE,k,4,MPI_COMM_WORLD); //m
+        //
+        // }
+
+        for (i=0; i < noOfObjects; i++) {
+            if (my_rank==i)
                 continue;
-            printf("Value other X %d: %.2f\n",j, x_other[j]);
-            printf("Value other Y %d: %.2f\n",j, y_other[j]);
-            printf("Value other VX %d: %.2f\n",j, vx_other[j]);
-            printf("Value other VY %d: %.2f\n",j, vy_other[j]);
 
-            MPI_Send(&x,sizeof(double),MPI_FLOAT,i,0,MPI_COMM_WORLD); //x
-            MPI_Send(&y,sizeof(double),MPI_FLOAT,i,1,MPI_COMM_WORLD); //y
-            MPI_Send(&vx,sizeof(double),MPI_FLOAT,i,2,MPI_COMM_WORLD); //vx
-            MPI_Send(&vy,sizeof(double),MPI_FLOAT,i,3,MPI_COMM_WORLD); //vy
-            MPI_Send(&m,sizeof(double),MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
+            MPI_Send(&x,1,MPI_DOUBLE,i,0,MPI_COMM_WORLD); //x
+            MPI_Send(&y,1,MPI_DOUBLE,i,1,MPI_COMM_WORLD); //y
+            MPI_Send(&vx,1,MPI_DOUBLE,i,2,MPI_COMM_WORLD); //vx
+            MPI_Send(&vy,1,MPI_DOUBLE,i,3,MPI_COMM_WORLD); //vy
+            MPI_Send(&m,1,MPI_DOUBLE,i,4,MPI_COMM_WORLD); //m
         }
 
         _Bool showData = false;
@@ -132,15 +143,21 @@ void main(int argc, char* argv[]){
         //for (i=0; i< noOfObjects; i++) {
             double ax_total=0;
             double ay_total=0;
-            for (j=0; j < noOfObjects-1; j++) {
+            for (j=0; j < noOfObjects; j++) {
                 if (my_rank==j)
                     continue;
 
-                double d = sqrt(fabs((x_other[j]-x) * (x_other[j]-x) + (y_other[j]-y) * (y_other[j]-y)));
-                double f = G * ((m_other[j]*m)/(d*d));
-                double fx = f * ((x_other[j]-x)/d);
+                MPI_Recv(&x_other,1,MPI_DOUBLE,j,0,MPI_COMM_WORLD,&status);
+                MPI_Recv(&y_other,1,MPI_DOUBLE,j,1,MPI_COMM_WORLD,&status);
+                MPI_Recv(&vx_other,1,MPI_DOUBLE,j,2,MPI_COMM_WORLD,&status);
+                MPI_Recv(&vy_other,1,MPI_DOUBLE,j,3,MPI_COMM_WORLD,&status);
+                MPI_Recv(&m_other,1,MPI_DOUBLE,j,4,MPI_COMM_WORLD,&status);
+
+                double d = sqrt(fabs((x_other-x) * (x_other-x) + (y_other-y) * (y_other-y)));
+                double f = G * ((m_other*m)/(d*d));
+                double fx = f * ((x_other-x)/d);
                 double ax = fx / m;
-                double fy = f * ((y_other[j]-y)/d);
+                double fy = f * ((y_other-y)/d);
                 double ay = fy / m;
 
                 if (showData && verbose) {
@@ -167,12 +184,12 @@ void main(int argc, char* argv[]){
 
         //}  // noOfObjects
 
-        for (i=0; i< noOfObjects; i++) {
+        //for (i=0; i< noOfObjects; i++) {
             x=x_new;
             y=y_new;
             vx=vx_new;
             vy=vy_new;
-        }
+        //}
 
     }  // nIter
     MPI_Finalize();
