@@ -37,9 +37,15 @@ void main(int argc, char* argv[]){
     file = fopen( DATAFILE , "r");
     fscanf(file,"%s",str);
     noOfObjects = atoi(str);
-    printf("Number of objects: %d\n",noOfObjects);
     if (noOfObjects > MAX_OBJECTS) {
         printf("*** ERROR: maximum no. of objects exceeded ***\n");
+        exit(0);
+    }
+
+    if (p!=3) {
+        if (my_rank==0) {
+            printf("Error: El número de procesos debe ser igual al número de objetos. Hay %d objetos.\n", noOfObjects);
+        }
         exit(0);
     }
 
@@ -88,38 +94,10 @@ void main(int argc, char* argv[]){
 
     for (int niter=0; niter<NUM_ITER; niter++) {
 
-        //for (i=0; i< noOfObjects; i++) {
-            x_new=x;
-            y_new=y;
-            vx_new=vx;
-            vy_new=vy;
-        //}
-
-
-        // Gather all data down to all the processes
-        //MPI_Allgather(&x, noOfObjects, MPI_DOUBLE, x_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Allgather(&y, noOfObjects, MPI_DOUBLE, y_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Allgather(&vx, noOfObjects, MPI_DOUBLE, vx_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Allgather(&vy, noOfObjects, MPI_DOUBLE, vy_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Allgather(&m, noOfObjects, MPI_DOUBLE, m_other, noOfObjects, MPI_DOUBLE, MPI_COMM_WORLD);
-
-        // for(i=0; i<noOfObjects; i++){
-        //     k=i+1;
-        //     MPI_Recv(&x_other[i],1,MPI_DOUBLE,i,0,MPI_COMM_WORLD,&status);
-        //     MPI_Recv(&y_other[i],1,MPI_DOUBLE,i,1,MPI_COMM_WORLD,&status);
-        //     MPI_Recv(&vx_other[i],1,MPI_DOUBLE,i,2,MPI_COMM_WORLD,&status);
-        //     MPI_Recv(&vy_other[i],1,MPI_DOUBLE,i,3,MPI_COMM_WORLD,&status);
-        //     MPI_Recv(&m_other[i],1,MPI_DOUBLE,i,4,MPI_COMM_WORLD,&status);
-        //
-        //     if(k == noOfObjects)
-        //         k = 0;
-        //     MPI_Send(&x,1,MPI_DOUBLE,k,0,MPI_COMM_WORLD); //x
-        //     MPI_Send(&y,1,MPI_DOUBLE,k,1,MPI_COMM_WORLD); //y
-        //     MPI_Send(&vx,1,MPI_DOUBLE,k,2,MPI_COMM_WORLD); //vx
-        //     MPI_Send(&vy,1,MPI_DOUBLE,k,3,MPI_COMM_WORLD); //vy
-        //     MPI_Send(&m,1,MPI_DOUBLE,k,4,MPI_COMM_WORLD); //m
-        //
-        // }
+        x_new=x;
+        y_new=y;
+        vx_new=vx;
+        vy_new=vy;
 
         for (i=0; i < noOfObjects; i++) {
             if (my_rank==i)
@@ -140,56 +118,51 @@ void main(int argc, char* argv[]){
         if (showData)
             printf("***** ITERATION %d *****\n",niter);
 
-        //for (i=0; i< noOfObjects; i++) {
-            double ax_total=0;
-            double ay_total=0;
-            for (j=0; j < noOfObjects; j++) {
-                if (my_rank==j)
-                    continue;
+        double ax_total=0;
+        double ay_total=0;
+        for (j=0; j < noOfObjects; j++) {
+            if (my_rank==j)
+                continue;
 
-                MPI_Recv(&x_other,1,MPI_DOUBLE,j,0,MPI_COMM_WORLD,&status);
-                MPI_Recv(&y_other,1,MPI_DOUBLE,j,1,MPI_COMM_WORLD,&status);
-                MPI_Recv(&vx_other,1,MPI_DOUBLE,j,2,MPI_COMM_WORLD,&status);
-                MPI_Recv(&vy_other,1,MPI_DOUBLE,j,3,MPI_COMM_WORLD,&status);
-                MPI_Recv(&m_other,1,MPI_DOUBLE,j,4,MPI_COMM_WORLD,&status);
+            MPI_Recv(&x_other,1,MPI_DOUBLE,j,0,MPI_COMM_WORLD,&status);
+            MPI_Recv(&y_other,1,MPI_DOUBLE,j,1,MPI_COMM_WORLD,&status);
+            MPI_Recv(&vx_other,1,MPI_DOUBLE,j,2,MPI_COMM_WORLD,&status);
+            MPI_Recv(&vy_other,1,MPI_DOUBLE,j,3,MPI_COMM_WORLD,&status);
+            MPI_Recv(&m_other,1,MPI_DOUBLE,j,4,MPI_COMM_WORLD,&status);
 
-                double d = sqrt(fabs((x_other-x) * (x_other-x) + (y_other-y) * (y_other-y)));
-                double f = G * ((m_other*m)/(d*d));
-                double fx = f * ((x_other-x)/d);
-                double ax = fx / m;
-                double fy = f * ((y_other-y)/d);
-                double ay = fy / m;
+            double d = sqrt(fabs((x_other-x) * (x_other-x) + (y_other-y) * (y_other-y)));
+            double f = G * ((m_other*m)/(d*d));
+            double fx = f * ((x_other-x)/d);
+            double ax = fx / m;
+            double fy = f * ((y_other-y)/d);
+            double ay = fy / m;
 
-                if (showData && verbose) {
-                    printf("  Distance between objects %d and %d: %f m\n",my_rank+1,j+1,d);
-                    printf("  Force between objects %d and %d: %f N*m²/kg²\n",my_rank+1,j+1,f);
-                    printf("  Force along x axis on object %d made by object %d: %f N*m²/kg²\n",my_rank+1,j+1,fx);
-                    printf("  Acceleration along x axis on object %d made by object %d: %f m/s²\n",my_rank+1,j+1,ax);
-                    printf("  Force along y axis on object %d made by object %d: %f N*m²/kg²\n",my_rank+1,j+1,fy);
-                    printf("  Acceleration along y axis on object %d made by object %d: %f m/s²\n",my_rank+1,j+1,ay);
-                }
-
-                ax_total += ax;
-                ay_total += ay;
-
+            if (showData && verbose) {
+                printf("  Distance between objects %d and %d: %f m\n",my_rank+1,j+1,d);
+                printf("  Force between objects %d and %d: %f N*m²/kg²\n",my_rank+1,j+1,f);
+                printf("  Force along x axis on object %d made by object %d: %f N*m²/kg²\n",my_rank+1,j+1,fx);
+                printf("  Acceleration along x axis on object %d made by object %d: %f m/s²\n",my_rank+1,j+1,ax);
+                printf("  Force along y axis on object %d made by object %d: %f N*m²/kg²\n",my_rank+1,j+1,fy);
+                printf("  Acceleration along y axis on object %d made by object %d: %f m/s²\n",my_rank+1,j+1,ay);
             }
 
-            vx_new += ax_total;
-            vy_new += ay_total;
+            ax_total += ax;
+            ay_total += ay;
 
-            x_new += vx_new;
-            y_new += vy_new;
-            if (showData)
-                printf("New position of object %d: %.2f, %.2f\n",my_rank,x_new,y_new);
+        }
 
-        //}  // noOfObjects
+        vx_new += ax_total;
+        vy_new += ay_total;
 
-        //for (i=0; i< noOfObjects; i++) {
-            x=x_new;
-            y=y_new;
-            vx=vx_new;
-            vy=vy_new;
-        //}
+        x_new += vx_new;
+        y_new += vy_new;
+        if (showData)
+            printf("New position of object %d: %.2f, %.2f\n",my_rank,x_new,y_new);
+
+        x=x_new;
+        y=y_new;
+        vx=vx_new;
+        vy=vy_new;
 
     }  // nIter
     MPI_Finalize();
