@@ -76,17 +76,18 @@ void main(int argc, char* argv[]){
             MPI_Send(&temp,sizeof(double),MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
         }
     }
+
     else
     {
-        MPI_Recv(&x,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,&status);
-        MPI_Recv(&y,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
-        MPI_Recv(&vx,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&status);
-        MPI_Recv(&vy,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,3,MPI_COMM_WORLD,&status);
-        MPI_Recv(&m,sizeof(double),MPI_FLOAT,MPI_ANY_SOURCE,4,MPI_COMM_WORLD,&status);
+        MPI_Recv(&x,sizeof(double),MPI_FLOAT,0,0,MPI_COMM_WORLD,&status);
+        MPI_Recv(&y,sizeof(double),MPI_FLOAT,0,1,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vx,sizeof(double),MPI_FLOAT,0,2,MPI_COMM_WORLD,&status);
+        MPI_Recv(&vy,sizeof(double),MPI_FLOAT,0,3,MPI_COMM_WORLD,&status);
+        MPI_Recv(&m,sizeof(double),MPI_FLOAT,0,4,MPI_COMM_WORLD,&status);
     }
 	printf("Starting Values for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
 
-    for (int niter=0; niter<5; niter++) {
+    for (int niter=0; niter<1; niter++) {
 
         //for (i=0; i< noOfObjects; i++) {
             x_new=x;
@@ -94,21 +95,39 @@ void main(int argc, char* argv[]){
             vx_new=vx;
             vy_new=vy;
         //}
-		printf("Starting Values NEW for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x_new,y_new,vx_new,vy_new,m);
+        printf("Received values OLD for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x,y,vx,vy,m);
+		printf("Received values NEW for %d:: x:%.2f, y:%.2f, vx:%.2f, vy:%.2f, m:%.2f\n",my_rank,x_new,y_new,vx_new,vy_new,m);
+
+
         // Gather all data down to all the processes
-        MPI_Allgather(&x, noOfObjects, MPI_FLOAT, &x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(&y, noOfObjects, MPI_FLOAT, &y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(&vx, noOfObjects, MPI_FLOAT, &vx_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(&vy, noOfObjects, MPI_FLOAT, &vy_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
-        MPI_Allgather(&m, noOfObjects, MPI_FLOAT, &m_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        //MPI_Allgather(&x, noOfObjects, MPI_FLOAT, x_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        //MPI_Allgather(&y, noOfObjects, MPI_FLOAT, y_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        //MPI_Allgather(&vx, noOfObjects, MPI_FLOAT, vx_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        //MPI_Allgather(&vy, noOfObjects, MPI_FLOAT, vy_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+        //MPI_Allgather(&m, noOfObjects, MPI_FLOAT, m_other, noOfObjects, MPI_FLOAT, MPI_COMM_WORLD);
+
+        for(j=0; j<noOfObjects-1; j++){
+            if (my_rank==j)
+                continue;
+            printf("Value other X %d: %.2f\n",j, x_other[j]);
+            printf("Value other Y %d: %.2f\n",j, y_other[j]);
+            printf("Value other VX %d: %.2f\n",j, vx_other[j]);
+            printf("Value other VY %d: %.2f\n",j, vy_other[j]);
+
+            MPI_Send(&x,sizeof(double),MPI_FLOAT,i,0,MPI_COMM_WORLD); //x
+            MPI_Send(&y,sizeof(double),MPI_FLOAT,i,1,MPI_COMM_WORLD); //y
+            MPI_Send(&vx,sizeof(double),MPI_FLOAT,i,2,MPI_COMM_WORLD); //vx
+            MPI_Send(&vy,sizeof(double),MPI_FLOAT,i,3,MPI_COMM_WORLD); //vy
+            MPI_Send(&m,sizeof(double),MPI_FLOAT,i,4,MPI_COMM_WORLD); //m
+        }
 
         _Bool showData = false;
 
         if (niter % NUM_ITER_SHOW == 0)
             showData = true;
 
-        //if (showData)
-        //    printf("***** ITERATION %d *****\n",niter);
+        if (showData)
+            printf("***** ITERATION %d *****\n",niter);
 
         //for (i=0; i< noOfObjects; i++) {
             double ax_total=0;
@@ -144,7 +163,7 @@ void main(int argc, char* argv[]){
             x_new += vx_new;
             y_new += vy_new;
             if (showData)
-                printf("New position of object %d: %.2f, %.2f\n",i,x_new,y_new);
+                printf("New position of object %d: %.2f, %.2f\n",my_rank,x_new,y_new);
 
         //}  // noOfObjects
 
