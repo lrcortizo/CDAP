@@ -25,29 +25,6 @@ void main(int argc, char* argv[]){
         double m;
     } indata, recdata;
 
-    int lengtharray[5];                     /* Array of lengths */
-    MPI_Aint disparray[5];                  /* Array of displacements */
-    MPI_Datatype typearray[5];              /* Array of MPI datatypes */
-    MPI_Aint startaddress, address;         /* Variables used to displacements */
-
-    lengtharray[0] = lengtharray[1] = lengtharray[2] = lengtharray[3] = lengtharray[4] = 1;
-    typearray[0] = typearray[1] = typearray[2] = typearray[3] = typearray[4] = MPI_DOUBLE;
-    disparray[0];
-
-    disparray[0] = 0;
-    MPI_Address(&indata.x, &startaddress);
-    MPI_Address(&indata.y, &address);
-
-    disparray[1] = address-startaddress;
-    MPI_Address(&indata.vx, &address);
-    disparray[2] = address-startaddress;
-    MPI_Address(&indata.vy, &address);
-    disparray[3] = address-startaddress;
-    MPI_Address(&indata.m, &address);
-    disparray[4] = address-startaddress;
-
-
-
     double x_other, y_other, vx_other, vy_other, m_other;
     double x, y, vx, vy, m;
 	double x_new, y_new, vx_new, vy_new;
@@ -60,31 +37,50 @@ void main(int argc, char* argv[]){
     int tag=0;
     char message[100];
 
-    MPI_Status status;
-    MPI_Datatype object_type;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &p);
 
-    file = fopen( DATAFILE , "r");
-    fscanf(file,"%s",str);
-    noOfObjects = atoi(str);
-    if (noOfObjects > MAX_OBJECTS) {
-        printf("*** ERROR: maximum no. of objects exceeded ***\n");
-        exit(0);
-    }
+    int block_counts[5];                    /* Array of lengths */
+    MPI_Aint offsets[5];
+    MPI_Aint extent;                        /* Array of displacements */
+    MPI_Datatype typearray[5];              /* Array of MPI datatypes */
+    MPI_Type_extent(MPI_DOUBLE, &extent);
 
-    if (p!=3) {
-        if (my_rank==0) {
-            printf("Error: El número de procesos debe ser igual al número de objetos. Hay %d objetos.\n", noOfObjects);
-        }
-        exit(0);
-    }
+    MPI_Status status;
+    MPI_Datatype object_type;
+
+    block_counts[0] = block_counts[1] = block_counts[2] = block_counts[3] = block_counts[4] = 1;
+    typearray[0] = typearray[1] = typearray[2] = typearray[3] = typearray[4] = MPI_DOUBLE;
+    offsets[0] = 0;
+    offsets[1] = extent;
+    offsets[2] = 2*extent;
+    offsets[3] = 3*extent;
+    offsets[4] = 4*extent;
+
+    MPI_Type_struct(5, block_counts, offsets, typearray, &object_type);
+    MPI_Type_commit(&object_type);
 
     printf("\n");
 
     if(my_rank == 0)
     {
+        file = fopen( DATAFILE , "r");
+        fscanf(file,"%s",str);
+        noOfObjects = atoi(str);
+
+        if (noOfObjects > MAX_OBJECTS) {
+            printf("*** ERROR: maximum no. of objects exceeded ***\n");
+            exit(0);
+        }
+
+        if (p!=3) {
+            if (my_rank==0) {
+                printf("Error: El número de procesos debe ser igual al número de objetos. Hay %d objetos.\n", noOfObjects);
+            }
+            exit(0);
+        }
+
         fscanf(file,"%s",str);
         recdata.x = atof(str);
         fscanf(file,"%s",str);
@@ -107,32 +103,31 @@ void main(int argc, char* argv[]){
 			indata.vy = atof(str);
 			fscanf(file,"%s",str);
 			indata.m = atof(str);
+            printf("Estoy aquí\n");
             MPI_Send(&indata,1,object_type,i,4,MPI_COMM_WORLD); //m
         }
     }
 
     else
     {
-        MPI_Recv(&recdata,1,object_type,0,0,MPI_COMM_WORLD,&status);
+        MPI_Recv(&indata,1,object_type,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
     }
+
 
     for (int niter=0; niter<NUM_ITER; niter++) {
 
-        x_new=x;
-        y_new=y;
-        vx_new=vx;
-        vy_new=vy;
+        x_new=indata.x;
+        y_new=indata.y;
+        vx_new=indata.vx;
+        vy_new=indata.vy;
 
-        for (i=0; i < noOfObjects; i++) {
-            if (my_rank==i)
-                continue;
+        // for (i=0; i < noOfObjects; i++) {
+        //     if (my_rank==i)
+        //         continue;
+        MPI_Bcast(&recdata, 1, object_type, 0, MPI_COMM_WORLD);
 
-            MPI_Send(&x,1,MPI_DOUBLE,i,0,MPI_COMM_WORLD); //x
-            MPI_Send(&y,1,MPI_DOUBLE,i,1,MPI_COMM_WORLD); //y
-            MPI_Send(&vx,1,MPI_DOUBLE,i,2,MPI_COMM_WORLD); //vx
-            MPI_Send(&vy,1,MPI_DOUBLE,i,3,MPI_COMM_WORLD); //vy
-            MPI_Send(&m,1,MPI_DOUBLE,i,4,MPI_COMM_WORLD); //m
-        }
+        // }
+        //printf("Soy el %d y la masa es %f\n",my_rank,recdata.m);
 
         _Bool showData = false;
 
@@ -144,9 +139,9 @@ void main(int argc, char* argv[]){
 
         double ax_total=0;
         double ay_total=0;
-        for (j=0; j < noOfObjects; j++) {
-            if (my_rank==j)
-                continue;
+        // for (j=0; j < noOfObjects; j++) {
+        //     if (my_rank==j)
+        //         continue;
 
             MPI_Recv(&x_other,1,MPI_DOUBLE,j,0,MPI_COMM_WORLD,&status);
             MPI_Recv(&y_other,1,MPI_DOUBLE,j,1,MPI_COMM_WORLD,&status);
@@ -173,7 +168,7 @@ void main(int argc, char* argv[]){
             ax_total += ax;
             ay_total += ay;
 
-        }
+        // }
 
         vx_new += ax_total;
         vy_new += ay_total;
