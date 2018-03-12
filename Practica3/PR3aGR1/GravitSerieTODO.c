@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,11 +24,11 @@ void main(int argc, char* argv[]){
         double vx;
         double vy;
         double m;
-    } indata, recdata;
+    } data;
 
     double x_other, y_other, vx_other, vy_other, m_other;
     double x, y, vx, vy, m;
-	double x_new, y_new, vx_new, vy_new;
+	  double x_new, y_new, vx_new, vy_new;
     double temp;
     int i,j,k;
 
@@ -82,53 +83,52 @@ void main(int argc, char* argv[]){
         }
 
         fscanf(file,"%s",str);
-        recdata.x = atof(str);
+        x = atof(str);
         fscanf(file,"%s",str);
-        recdata.y = atof(str);
+        y = atof(str);
         fscanf(file,"%s",str);
-        recdata.vx = atof(str);
+        vx = atof(str);
         fscanf(file,"%s",str);
-        recdata.vy = atof(str);
+        vy = atof(str);
         fscanf(file,"%s",str);
-        recdata.m = atof(str);
+        m = atof(str);
 
         for (i=1; i< noOfObjects; i++) {
-			fscanf(file,"%s",str);
-			indata.x = atof(str);
-			fscanf(file,"%s",str);
-			indata.y = atof(str);
-			fscanf(file,"%s",str);
-			indata.vx = atof(str);
-			fscanf(file,"%s",str);
-			indata.vy = atof(str);
-			fscanf(file,"%s",str);
-			indata.m = atof(str);
-            printf("Estoy aquí\n");
-            MPI_Send(&indata,1,object_type,i,4,MPI_COMM_WORLD); //m
+    			fscanf(file,"%s",str);
+    			data.x = atof(str);
+    			fscanf(file,"%s",str);
+    			data.y = atof(str);
+    			fscanf(file,"%s",str);
+    			data.vx = atof(str);
+    			fscanf(file,"%s",str);
+    			data.vy = atof(str);
+    			fscanf(file,"%s",str);
+    			data.m = atof(str);
+          //printf("Estoy aquí\n");
+          MPI_Send(&data,1,object_type,i,tag,MPI_COMM_WORLD);
         }
     }
 
     else
     {
-        MPI_Recv(&indata,1,object_type,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+        printf("Soy %d y recibo datos\n", my_rank);
+
+        MPI_Recv(&data,1,object_type,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+
+        x = data.x;
+        y = data.y;
+        vx = data.vx;
+        vy = data.vy;
+        m = data.m;
     }
 
-
     for (int niter=0; niter<NUM_ITER; niter++) {
-
-        x_new=indata.x;
-        y_new=indata.y;
-        vx_new=indata.vx;
-        vy_new=indata.vy;
-
-        // for (i=0; i < noOfObjects; i++) {
-        //     if (my_rank==i)
-        //         continue;
-        MPI_Bcast(&recdata, 1, object_type, 0, MPI_COMM_WORLD);
-
-        // }
-        //printf("Soy el %d y la masa es %f\n",my_rank,recdata.m);
-
+        
+        x_new = x;
+        y_new = y;
+        vx_new = vx;
+        vy_new = vy;
+        
         _Bool showData = false;
 
         if (niter % NUM_ITER_SHOW == 0)
@@ -139,21 +139,27 @@ void main(int argc, char* argv[]){
 
         double ax_total=0;
         double ay_total=0;
-        // for (j=0; j < noOfObjects; j++) {
-        //     if (my_rank==j)
-        //         continue;
+        
+        for (j=0; j < noOfObjects; j++) {
 
-            MPI_Recv(&x_other,1,MPI_DOUBLE,j,0,MPI_COMM_WORLD,&status);
-            MPI_Recv(&y_other,1,MPI_DOUBLE,j,1,MPI_COMM_WORLD,&status);
-            MPI_Recv(&vx_other,1,MPI_DOUBLE,j,2,MPI_COMM_WORLD,&status);
-            MPI_Recv(&vy_other,1,MPI_DOUBLE,j,3,MPI_COMM_WORLD,&status);
-            MPI_Recv(&m_other,1,MPI_DOUBLE,j,4,MPI_COMM_WORLD,&status);
+            data.x = x;
+            data.y = y;
+            data.vx = vx;
+            data.vy = vy;
+            data.m = m;
 
-            double d = sqrt(fabs((x_other-x) * (x_other-x) + (y_other-y) * (y_other-y)));
-            double f = G * ((m_other*m)/(d*d));
-            double fx = f * ((x_other-x)/d);
+            MPI_Bcast(&data, 1, object_type, j, MPI_COMM_WORLD);
+            
+            printf(" Im %d and I receive data: %f, %f, %f, %f, %f\n",my_rank, data.x, data.y, data.vx, data.vy, data.m);
+
+            if (my_rank==j)
+              continue;
+
+            double d = sqrt(fabs((x-data.x) * (x-data.x) + (y-data.y) * (y-data.y)));
+            double f = G * ((m*data.m)/(d*d));
+            double fx = f * ((data.x-x)/d);
             double ax = fx / m;
-            double fy = f * ((y_other-y)/d);
+            double fy = f * ((y-data.y)/d);
             double ay = fy / m;
 
             if (showData && verbose) {
@@ -168,20 +174,16 @@ void main(int argc, char* argv[]){
             ax_total += ax;
             ay_total += ay;
 
-        // }
+         }
 
         vx_new += ax_total;
         vy_new += ay_total;
 
         x_new += vx_new;
         y_new += vy_new;
-        if (showData)
-            printf("New position of object %d: %.2f, %.2f\n",my_rank,x_new,y_new);
 
-        x=x_new;
-        y=y_new;
-        vx=vx_new;
-        vy=vy_new;
+        if (showData)
+            printf("New position of object %d: %.2f, %.2f\n", my_rank, x_new, y_new);
 
     }  // nIter
     MPI_Finalize();
