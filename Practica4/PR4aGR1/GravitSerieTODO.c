@@ -7,7 +7,7 @@
 
 #define MAX_CHAR 100
 #define MAX_OBJECTS 10
-#define DATAFILE "data.txt"
+#define DATAFILE "data.bin"
 #define G 6.674e-11
 #define NUM_ITER 100001
 #define NUM_ITER_SHOW 5000
@@ -15,8 +15,9 @@
 
 void main(int argc, char* argv[]){
     char  str[MAX_CHAR];
-    FILE *file;
+    MPI_File file;
     int noOfObjects;
+    int buffer[5];
     struct {
         double x;
         double y;
@@ -52,19 +53,25 @@ void main(int argc, char* argv[]){
     offsets[3] = 3*extent;
     offsets[4] = 4*extent;
 
-    MPI_Type_struct(5, block_counts, offsets, typearray, &object_type);
+
+    //MPI_Type_struct(5, block_counts, offsets, typearray, &object_type);
+    MPI_Type_contiguous(5, MPI_DOUBLE, &object_type);
     MPI_Type_commit(&object_type);
 
     printf("\n");
 
-    file = fopen( DATAFILE , "r");
-    fscanf(file,"%s",str);
-    noOfObjects = atoi(str);
+    // file = fopen( DATAFILE , "r");
+    // fscanf(file,"%s",str);
+    // noOfObjects = atoi(str);
 
-    if (noOfObjects > MAX_OBJECTS) {
-        printf("*** ERROR: maximum no. of objects exceeded ***\n");
-        exit(0);
-    }
+    MPI_File_open(MPI_COMM_WORLD, DATAFILE, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &file);
+    MPI_File_seek(file, my_rank*5*sizeof(MPI_DOUBLE), MPI_SEEK_SET);
+    MPI_File_read(file, buffer, 5, MPI_DOUBLE, MPI_STATUS_IGNORE);
+
+    // if (noOfObjects > MAX_OBJECTS) {
+    //     printf("*** ERROR: maximum no. of objects exceeded ***\n");
+    //     exit(0);
+    // }
 
     if (p!=3) {
         if (my_rank==0) {
@@ -75,45 +82,51 @@ void main(int argc, char* argv[]){
 
     if(my_rank == 0)
     {
+        printf("Hola, soy %d y leí: ",my_rank);
+         for (int i=0; i<5; i++)
+         printf("%d ",buffer[i]);
+         printf("\n");
 
-        fscanf(file,"%s",str);
-        x = atof(str);
-        fscanf(file,"%s",str);
-        y = atof(str);
-        fscanf(file,"%s",str);
-        vx = atof(str);
-        fscanf(file,"%s",str);
-        vy = atof(str);
-        fscanf(file,"%s",str);
-        m = atof(str);
 
-        for (int i=1; i< noOfObjects; i++) {
-    			fscanf(file,"%s",str);
-    			data.x = atof(str);
-    			fscanf(file,"%s",str);
-    			data.y = atof(str);
-    			fscanf(file,"%s",str);
-    			data.vx = atof(str);
-    			fscanf(file,"%s",str);
-    			data.vy = atof(str);
-    			fscanf(file,"%s",str);
-    			data.m = atof(str);
-          //printf("Estoy aquí\n");
-          MPI_Send(&data,1,object_type,i,0,MPI_COMM_WORLD);
-        }
+        // fscanf(file,"%s",str);
+        // x = atof(str);
+        // fscanf(file,"%s",str);
+        // y = atof(str);
+        // fscanf(file,"%s",str);
+        // vx = atof(str);
+        // fscanf(file,"%s",str);
+        // vy = atof(str);
+        // fscanf(file,"%s",str);
+        // m = atof(str);
+        //
+        // for (int i=1; i< noOfObjects; i++) {
+    	// 		fscanf(file,"%s",str);
+    	// 		data.x = atof(str);
+    	// 		fscanf(file,"%s",str);
+    	// 		data.y = atof(str);
+    	// 		fscanf(file,"%s",str);
+    	// 		data.vx = atof(str);
+    	// 		fscanf(file,"%s",str);
+    	// 		data.vy = atof(str);
+    	// 		fscanf(file,"%s",str);
+    	// 		data.m = atof(str);
+        //   //printf("Estoy aquí\n");
+          // MPI_Send(&data,1,object_type,i,0,MPI_COMM_WORLD);
+        //}
     }
 
     else
     {
-        MPI_Recv(&data,1,object_type,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
-
-        x = data.x;
-        y = data.y;
-        vx = data.vx;
-        vy = data.vy;
-        m = data.m;
+        // MPI_Recv(&data,1,object_type,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+        //
+        // x = data.x;
+        // y = data.y;
+        // vx = data.vx;
+        // vy = data.vy;
+        // m = data.m;
     }
-    fclose(file);
+    MPI_File_close(&file);
+
 
     printf(" Im %d and I receive data: %f, %f, %f, %f, %f\n", my_rank, x, y, vx, vy, m);
 
