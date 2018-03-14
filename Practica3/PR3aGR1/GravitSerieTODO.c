@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,17 +25,11 @@ void main(int argc, char* argv[]){
         double m;
     } data;
 
-    double x_other, y_other, vx_other, vy_other, m_other;
     double x, y, vx, vy, m;
-	  double x_new, y_new, vx_new, vy_new;
-    double temp;
-    int i,j,k;
+	double x_new, y_new, vx_new, vy_new;
 
     int my_rank;
     int p;
-    int source; int dest;
-    int tag=0;
-    char message[100];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -64,23 +57,24 @@ void main(int argc, char* argv[]){
 
     printf("\n");
 
+    file = fopen( DATAFILE , "r");
+    fscanf(file,"%s",str);
+    noOfObjects = atoi(str);
+
+    if (noOfObjects > MAX_OBJECTS) {
+        printf("*** ERROR: maximum no. of objects exceeded ***\n");
+        exit(0);
+    }
+
+    if (p!=3) {
+        if (my_rank==0) {
+            printf("Error: El número de procesos debe ser igual al número de objetos. Hay %d objetos.\n", noOfObjects);
+        }
+        exit(0);
+    }
+
     if(my_rank == 0)
     {
-        file = fopen( DATAFILE , "r");
-        fscanf(file,"%s",str);
-        noOfObjects = atoi(str);
-
-        if (noOfObjects > MAX_OBJECTS) {
-            printf("*** ERROR: maximum no. of objects exceeded ***\n");
-            exit(0);
-        }
-
-        if (p!=3) {
-            if (my_rank==0) {
-                printf("Error: El número de procesos debe ser igual al número de objetos. Hay %d objetos.\n", noOfObjects);
-            }
-            exit(0);
-        }
 
         fscanf(file,"%s",str);
         x = atof(str);
@@ -93,7 +87,7 @@ void main(int argc, char* argv[]){
         fscanf(file,"%s",str);
         m = atof(str);
 
-        for (i=1; i< noOfObjects; i++) {
+        for (int i=1; i< noOfObjects; i++) {
     			fscanf(file,"%s",str);
     			data.x = atof(str);
     			fscanf(file,"%s",str);
@@ -105,14 +99,12 @@ void main(int argc, char* argv[]){
     			fscanf(file,"%s",str);
     			data.m = atof(str);
           //printf("Estoy aquí\n");
-          MPI_Send(&data,1,object_type,i,tag,MPI_COMM_WORLD);
+          MPI_Send(&data,1,object_type,i,0,MPI_COMM_WORLD);
         }
     }
 
     else
     {
-        printf("Soy %d y recibo datos\n", my_rank);
-
         MPI_Recv(&data,1,object_type,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
 
         x = data.x;
@@ -121,14 +113,17 @@ void main(int argc, char* argv[]){
         vy = data.vy;
         m = data.m;
     }
+    fclose(file);
+
+    printf(" Im %d and I receive data: %f, %f, %f, %f, %f\n", my_rank, x, y, vx, vy, m);
 
     for (int niter=0; niter<NUM_ITER; niter++) {
-        
+
         x_new = x;
         y_new = y;
         vx_new = vx;
         vy_new = vy;
-        
+
         _Bool showData = false;
 
         if (niter % NUM_ITER_SHOW == 0)
@@ -139,8 +134,8 @@ void main(int argc, char* argv[]){
 
         double ax_total=0;
         double ay_total=0;
-        
-        for (j=0; j < noOfObjects; j++) {
+
+        for(int j = 0; j<noOfObjects;j++){
 
             data.x = x;
             data.y = y;
@@ -149,18 +144,18 @@ void main(int argc, char* argv[]){
             data.m = m;
 
             MPI_Bcast(&data, 1, object_type, j, MPI_COMM_WORLD);
-            
-            printf(" Im %d and I receive data: %f, %f, %f, %f, %f\n",my_rank, data.x, data.y, data.vx, data.vy, data.m);
 
-            if (my_rank==j)
-              continue;
+            if (my_rank == j){
+                continue;
+            }
 
-            double d = sqrt(fabs((x-data.x) * (x-data.x) + (y-data.y) * (y-data.y)));
-            double f = G * ((m*data.m)/(d*d));
+            double d = sqrt((data.x-x) * (data.x-x) + (data.y-y) * (data.y-y));
+            double f = G * ((data.m*m)/(d*d));
             double fx = f * ((data.x-x)/d);
             double ax = fx / m;
-            double fy = f * ((y-data.y)/d);
+            double fy = f * ((data.y-y)/d);
             double ay = fy / m;
+
 
             if (showData && verbose) {
                 printf("  Distance between objects %d and %d: %f m\n",my_rank+1,j+1,d);
@@ -174,8 +169,8 @@ void main(int argc, char* argv[]){
             ax_total += ax;
             ay_total += ay;
 
-         }
 
+        }
         vx_new += ax_total;
         vy_new += ay_total;
 
@@ -185,6 +180,13 @@ void main(int argc, char* argv[]){
         if (showData)
             printf("New position of object %d: %.2f, %.2f\n", my_rank, x_new, y_new);
 
+        x=x_new;
+        y=y_new;
+        vx=vx_new;
+        vy=vy_new;
+
     }  // nIter
+
     MPI_Finalize();
+
 }  // main
