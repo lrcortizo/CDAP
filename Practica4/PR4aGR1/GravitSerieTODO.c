@@ -17,7 +17,9 @@ void main(int argc, char* argv[]){
     char  str[MAX_CHAR];
     MPI_File file;
     int noOfObjects;
-    int buffer[5];
+    double buffer[5];
+    int bufferaux[1];
+    
     struct {
         double x;
         double y;
@@ -57,17 +59,33 @@ void main(int argc, char* argv[]){
     //MPI_Type_struct(5, block_counts, offsets, typearray, &object_type);
     MPI_Type_contiguous(5, MPI_DOUBLE, &object_type);
     MPI_Type_commit(&object_type);
+    MPI_File_open(MPI_COMM_WORLD, DATAFILE, MPI_MODE_RDONLY, MPI_INFO_NULL, &file);
 
     printf("\n");
+    if (my_rank == 0){
+        MPI_File_read_at(file, 0, bufferaux, 1, MPI_INT, &status);
+        //MPI_File_seek(file, 0, MPI_SEEK_SET);
+        //MPI_File_read(file, bufferaux, 1, MPI_INT, MPI_STATUS_IGNORE);
+        //noOfObjects = buffer[0];
+        printf("Hola, soy %d y leí: ",my_rank);
+         for (int i=0; i<1; i++)
+         printf("%d ",bufferaux[i]);
+         printf("\n");
+
+    }
+    
+    MPI_File_seek(file, my_rank*5*sizeof(MPI_DOUBLE)+1, MPI_SEEK_SET);
+    MPI_File_read(file, buffer, 5, MPI_DOUBLE, MPI_STATUS_IGNORE);
 
     // file = fopen( DATAFILE , "r");
     // fscanf(file,"%s",str);
     // noOfObjects = atoi(str);
+    
+    
+    
+    
 
-    MPI_File_open(MPI_COMM_WORLD, DATAFILE, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &file);
-    MPI_File_seek(file, my_rank*5*sizeof(MPI_DOUBLE), MPI_SEEK_SET);
-    MPI_File_read(file, buffer, 5, MPI_DOUBLE, MPI_STATUS_IGNORE);
-
+    
     // if (noOfObjects > MAX_OBJECTS) {
     //     printf("*** ERROR: maximum no. of objects exceeded ***\n");
     //     exit(0);
@@ -84,7 +102,7 @@ void main(int argc, char* argv[]){
     {
         printf("Hola, soy %d y leí: ",my_rank);
          for (int i=0; i<5; i++)
-         printf("%d ",buffer[i]);
+         printf("%f ",buffer[i]);
          printf("\n");
 
 
@@ -156,7 +174,7 @@ void main(int argc, char* argv[]){
             data.vy = vy;
             data.m = m;
 
-            MPI_Bcast(&data, 1, object_type, j, MPI_COMM_WORLD);
+            //MPI_Bcast(&data, 1, object_type, j, MPI_COMM_WORLD);
 
             if (my_rank == j){
                 continue;
