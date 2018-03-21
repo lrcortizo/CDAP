@@ -35,11 +35,11 @@ void main(int argc, char* argv[]){
     int my_rank;
     int p;
 
+    MPI_Win positions_win;
+
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &p);
-    
-    double bufferpositions[p*2];
 
     int block_counts[5];                    /* Array of lengths */
     MPI_Aint offsets[5];
@@ -62,6 +62,7 @@ void main(int argc, char* argv[]){
     MPI_Type_struct(5, block_counts, offsets, typearray, &object_type);
     MPI_Type_contiguous(5, MPI_DOUBLE, &object_type);
     MPI_Type_commit(&object_type);
+    double positions[3*2];
 
     printf("\n");
     if (my_rank == 0){
@@ -80,8 +81,12 @@ void main(int argc, char* argv[]){
             exit(0);
         }
         fclose(file_initial);
+        MPI_Win_create(&positions,sizeof(double),1,MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
     }
-
+    else{
+         MPI_Win_create(MPI_BOTTOM,0,1,MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
+    }
+    MPI_Win_fence(0,positions_win);
     MPI_File_open(MPI_COMM_WORLD, DATAFILE, MPI_MODE_RDONLY, MPI_INFO_NULL, &file);
 
     MPI_File_read_at(file, my_rank*5*sizeof(double)+sizeof(int), buffer, 5, MPI_DOUBLE, &status);
@@ -163,18 +168,25 @@ void main(int argc, char* argv[]){
         x_new += vx_new;
         y_new += vy_new;
 
-        if (showData && my_rank == 0){
-
-            for(int i = 0; i < p; i++){
-                MPI_Recv();
-                printf("New position of object %d: %.2f, %.2f\n", my_rank, x_new, y_new);
-                printf("New position of object %d: %.2f, %.2f\n", 1, bufferposition[], y_new);
-                printf("New position of object %d: %.2f, %.2f\n", 2, x_new, y_new);
-
+        if (showData) {
+            if(my_rank != 0){
+                //MPI_Put(&x_new, 0, MPI_DOUBLE, 0, my_rank*sizeof(double), 1, MPI_DOUBLE, positions_win);
+                //MPI_Put(&y_new, 0, MPI_DOUBLE, 0, my_rank*sizeof(double)+sizeof(double), 1, MPI_DOUBLE, positions_win);
+                // MPI_Put(position, 1, MPI_DOUBLE, 0, 10*sizeof(double), 4, MPI_DOUBLE, position_win);
+                // MPI_Put(position, 1, MPI_DOUBLE, 0, 10*sizeof(double), 4, MPI_DOUBLE, position_win);
+                // positions[my_rank*2] = x_new;
+                // positions[my_rank*2+1] = y_new;
+            }else{
+                for(int i = 0; i < p; i++){
+                    MPI_Get(&x_new, 0, MPI_DOUBLE, 0, 2*i*sizeof(double), 1, MPI_DOUBLE, positions_win);
+                    //MPI_Get(&y_new, 0, MPI_DOUBLE, 0, 2*i*sizeof(double)+sizeof(double), 1, MPI_DOUBLE, positions_win);
+                    // MPI_Get(&position, 1, MPI_DOUBLE, 0, 0, 1, MPI_DOUBLE, position);
+                    // MPI_Get(&position, 2, MPI_DOUBLE, 0, 0, 1, MPI_DOUBLE, position);
+                    printf("New position of object %d: %.2f, %.2f\n", i, x_new, positions[2*i+1]);
+                    //printf("New position of object %d: %.2f, %.2f\n", 1_, x_new, y_new);
+                }
             }
         }
-
-
 
         x=x_new;
         y=y_new;
