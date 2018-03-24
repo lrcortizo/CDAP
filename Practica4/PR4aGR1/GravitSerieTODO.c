@@ -81,16 +81,11 @@ void main(int argc, char* argv[]){
             exit(0);
         }
         fclose(file_initial);
-        // MPI_Win_create(&positions,sizeof(double)*6,sizeof(double),MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
-    }
-    else{
-         // MPI_Win_create(MPI_BOTTOM,0,1,MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
     }
 
     MPI_Win_create(&positions,sizeof(double)*6,sizeof(double),MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
 
 
-    // MPI_Win_fence(0,positions_win);
     MPI_File_open(MPI_COMM_WORLD, DATAFILE, MPI_MODE_RDONLY, MPI_INFO_NULL, &file);
 
     MPI_File_read_at(file, my_rank*5*sizeof(double)+sizeof(int), buffer, 5, MPI_DOUBLE, &status);
@@ -175,22 +170,18 @@ void main(int argc, char* argv[]){
 
 
 
+        MPI_Win_fence(0,positions_win);
         if (showData) {
-            MPI_Win_fence(0,positions_win);
             if(my_rank != 0){
                 MPI_Put(&x_new, 1, MPI_DOUBLE, 0, 2*my_rank, 1, MPI_DOUBLE, positions_win);
                 MPI_Put(&y_new, 1, MPI_DOUBLE, 0, 2*my_rank+1, 1, MPI_DOUBLE, positions_win);
-
-
-
             }else{
                 for(int i = 0; i < p; i++){
                     printf("New position of object %d: %.2f, %.2f\n", i, positions[2*i], positions[2*i+1]);
                 }
             }
-            MPI_Win_fence(0,positions_win);
         }
-        // MPI_Win_fence(0,positions_win);
+        MPI_Win_fence(0,positions_win);
 
         x=x_new;
         y=y_new;
