@@ -30,7 +30,7 @@ void main(int argc, char* argv[]){
     } data;
 
     double x, y, vx, vy, m;
-	  double x_new, y_new, vx_new, vy_new;
+    double x_new, y_new, vx_new, vy_new;
 
     int my_rank;
     int p;
@@ -87,7 +87,7 @@ void main(int argc, char* argv[]){
          // MPI_Win_create(MPI_BOTTOM,0,1,MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
     }
 
-    MPI_Win_create(&positions,sizeof(double)*2,sizeof(double),MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
+    MPI_Win_create(&positions,sizeof(double)*6,sizeof(double),MPI_INFO_NULL,MPI_COMM_WORLD,&positions_win);
 
 
     // MPI_Win_fence(0,positions_win);
@@ -168,41 +168,24 @@ void main(int argc, char* argv[]){
         }
         vx_new += ax_total;
         vy_new += ay_total;
-        // MPI_Win_fence(0,positions_win);
 
-        // MPI_Get(&x_new, 1, MPI_DOUBLE, 0, 2*my_rank*sizeof(double), 1, MPI_DOUBLE, positions_win);
 
         x_new += vx_new;
         y_new += vy_new;
 
 
-        //positions[my_rank] = x_new;
 
         if (showData) {
-            printf("New position of object %d: %.2f, %.2f\n", my_rank, x_new, y_new);
             MPI_Win_fence(0,positions_win);
             if(my_rank != 0){
-                MPI_Put(&x_new, 1, MPI_DOUBLE, 1, 2*my_rank, 1, MPI_DOUBLE, positions_win);
-                MPI_Put(&y_new, 1, MPI_DOUBLE, 1, 2*my_rank+1, 1, MPI_DOUBLE, positions_win);
-                printf("TDS %d: (POSICION:%d, %d) %.2f, %.2f\n", my_rank, 2*my_rank, 2*my_rank+1, positions[2*my_rank], positions[2*my_rank+1]);
-                //printf("New position of object %d: %.2f\n", i, positions[2*i+1]);
+                MPI_Put(&x_new, 1, MPI_DOUBLE, 0, 2*my_rank, 1, MPI_DOUBLE, positions_win);
+                MPI_Put(&y_new, 1, MPI_DOUBLE, 0, 2*my_rank+1, 1, MPI_DOUBLE, positions_win);
 
-                //MPI_Put(&y_new, 0, MPI_DOUBLE, 0, my_rank*sizeof(double)+sizeof(double), 1, MPI_DOUBLE, positions_win);
-                // MPI_Put(position, 1, MPI_DOUBLE, 0, 10*sizeof(double), 4, MPI_DOUBLE, position_win);
-                // MPI_Put(position, 1, MPI_DOUBLE, 0, 10*sizeof(double), 4, MPI_DOUBLE, position_win);
-                // positions[my_rank*2] = x_new;
-                // positions[my_rank*2+1] = y_new;
-                // MPI_Accumulate(&x_new,1,MPI_DOUBLE,0,0,1,MPI_DOUBLE,MPI_SUM,positions_win);
 
 
             }else{
                 for(int i = 0; i < p; i++){
-
-                    //MPI_Get(&y_new, 0, MPI_DOUBLE, 0, 2*i*sizeof(double)+sizeof(double), 1, MPI_DOUBLE, positions_win);
-                    // MPI_Get(&position, 1, MPI_DOUBLE, 0, 0, 1, MPI_DOUBLE, position);
-                    // MPI_Get(&position, 2, MPI_DOUBLE, 0, 0, 1, MPI_DOUBLE, position);
-                    printf("New position of object %d: %.2f, %.2f\n", i, x_new, positions[2*i+1]);
-                    //printf("New position of object %d: %.2f, %.2f\n", 1_, x_new, y_new);
+                    printf("New position of object %d: %.2f, %.2f\n", i, positions[2*i], positions[2*i+1]);
                 }
             }
             MPI_Win_fence(0,positions_win);
