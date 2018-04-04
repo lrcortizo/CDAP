@@ -10,6 +10,11 @@
 #define NUM_ITER 100001
 #define NUM_ITER_SHOW 5000
 #define verbose false
+#define M_EARTH 5.972e24 // mass of earth (kg)
+#define M_SAT 50 // mass of satellites (kg)
+#define V_SAT 2609.56 // speed of satellites (geosynchronous orbit) (m/s)
+#define D_SAT 35786000 // distance of satellites (geosynchronous orbit) (m)
+#define G 6.674e-11 // Gravitational constant
 
 void main(){
     char  str[MAX_CHAR];
