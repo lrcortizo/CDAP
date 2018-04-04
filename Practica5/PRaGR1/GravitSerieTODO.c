@@ -15,37 +15,48 @@
 #define V_SAT 2609.56 // speed of satellites (geosynchronous orbit) (m/s)
 #define D_SAT 35786000 // distance of satellites (geosynchronous orbit) (m)
 #define G 6.674e-11 // Gravitational constant
+#define PI 3.14159265359 //Pi constant
 
-void main(){
+void main(int argc, char *argv[]){
     char  str[MAX_CHAR];
     FILE *file;
     int noOfObjects;
     double x[MAX_OBJECTS], y[MAX_OBJECTS], vx[MAX_OBJECTS], vy[MAX_OBJECTS], m[MAX_OBJECTS];
     double x_new[MAX_OBJECTS], y_new[MAX_OBJECTS], vx_new[MAX_OBJECTS], vy_new[MAX_OBJECTS];
     int i,j;
+    double alpha;
 
-    file = fopen( DATAFILE , "r");
-    fscanf(file,"%s",str);
-    noOfObjects = atoi(str);
+
+    noOfObjects = atoi(argv[1]);
     printf("Number of objects: %d\n",noOfObjects);
-    if (noOfObjects > MAX_OBJECTS) {
-        printf("*** ERROR: maximum no. of objects exceeded ***\n");
+    if (noOfObjects <= 1) {
+        printf("*** ERROR: needed at least one satelite ***\n");
         exit(0);
     }
 
     printf("\n");
 
-    for (i=0; i< noOfObjects; i++) {
-        fscanf(file,"%s",str);
-        x[i] = atof(str);
-        fscanf(file,"%s",str);
-        y[i] = atof(str);
-        fscanf(file,"%s",str);
-        vx[i] = atof(str);
-        fscanf(file,"%s",str);
-        vy[i] = atof(str);
-        fscanf(file,"%s",str);
-        m[i] = atof(str);
+    //Tierra
+    alpha = (PI*(360.0/(noOfObjects-1)))/180.0;
+    double angle = 0;
+    x[0] = 0.0;
+    y[0] = 0.0;
+    vx[0] = 0.0;
+    vy[0] = 0.0;
+    m[0] = M_EARTH;
+
+    //Calculos iniciales satelites
+    for (i=1; i < noOfObjects;i++) {
+      x[i] = cos(angle) * D_SAT;
+      y[i] = sin(angle) * D_SAT;
+      vx[i] = -sin(angle) * V_SAT;
+      vy[i] = cos(angle) * V_SAT;
+      m[i] = M_SAT;
+      printf("Satelite nº %d \n", i );
+      printf("\tAngulo: %f \n", angle );
+      printf("\tPosition: %f,%f \n", x[i], y[i] );
+      printf("\tVx, Vy: %f,%f \n", vx[i], vy[i] );
+      angle+=alpha;
     }
 
     for (int niter=0; niter<NUM_ITER; niter++) {
