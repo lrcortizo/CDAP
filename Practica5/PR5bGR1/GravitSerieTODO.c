@@ -79,7 +79,7 @@ void main(int argc, char *argv[]){
             printf("***** ITERATION %d *****\n",niter);
 
 
-        #pragma omp parallel for shared(x_new, y_new, vx_new, vy_new, x, y, m, noOfObjects, showData) private(i, j)
+        #pragma omp parallel for default(shared) private(i, j)
         for (i=0; i< noOfObjects; i++) {
             double ax_total=0;
             double ay_total=0;
