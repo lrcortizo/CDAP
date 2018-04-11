@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <omp.h>
 #define MAX_CHAR 100
 #define MAX_OBJECTS 10
 #define DATAFILE "data.txt"
@@ -26,10 +27,11 @@ void main(int argc, char *argv[]){
     int i,j;
     double alpha;
 
-
-    noOfObjects = atoi(argv[1]);
-    printf("Number of objects: %d\n",noOfObjects);
-    if (noOfObjects <= 1) {
+    if (argc > 1) {
+      noOfObjects = atoi(argv[1]);
+      printf("Number of objects: %d\n",noOfObjects);
+    }
+    else {
         printf("*** ERROR: needed at least one satelite ***\n");
         exit(0);
     }
@@ -76,6 +78,8 @@ void main(int argc, char *argv[]){
         if (showData)
             printf("***** ITERATION %d *****\n",niter);
 
+
+        #pragma omp parallel for shared(x_new, y_new, vx_new, vy_new, x, y, m, noOfObjects, showData) private(i, j)
         for (i=0; i< noOfObjects; i++) {
             double ax_total=0;
             double ay_total=0;
@@ -109,9 +113,10 @@ void main(int argc, char *argv[]){
 
             x_new[i] += vx_new[i];
             y_new[i] += vy_new[i];
-            if (showData)
-                printf("New position of object %d: %.2f, %.2f\n",i,x_new[i],y_new[i]);
 
+            if (showData) {
+                printf("New position of object %d: %.2f, %.2f\n",i,x_new[i],y_new[i]);
+            }
         }  // noOfObjects
 
         for (i=0; i< noOfObjects; i++) {
