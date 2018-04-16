@@ -1,2 +1,2 @@
-# Computación Distribuída y de Altas Prestacións
+# Computación Distribuída y de Altas Prestaciones
 #### Master en Ingeniería Informática - Universiad de Vigo
