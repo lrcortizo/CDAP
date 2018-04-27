@@ -3,8 +3,9 @@
 import sys
 
 # ---------------------------------------------------------------------------
-# Este mapper acepta valores <key, value> y el value puede hacer referencia a una librería o al numero de ejemplares
-#
+# Este mapper acepta valores <key, value>
+# key se corresponde con nombres de libros
+# value puede ser el numero de ejemlares vendidos o la librería donde se vende
 # No hay ninguna comprobación de errores en la entrada
 # ---------------------------------------------------------------------------
 
