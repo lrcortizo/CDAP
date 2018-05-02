@@ -21,6 +21,7 @@ numAmazon = 0
 numFNAC = 0
 labelFNAC = False
 labelAmazon = False
+best = ""
 
 for line in sys.stdin:
     line       = line.strip()
@@ -54,15 +55,11 @@ for line in sys.stdin:
         labelAmazon = False
         prev_key = curr_key
 
-if prev_key == curr_key:
-    if labelFNAC and labelAmazon:
-        print( "{0}\t{1}\tSe vende en FNAC y Amazon".format(prev_key, cont) )
-    elif labelFNAC:
-        print( "{0}\t{1}\tSe vende en FNAC".format(prev_key, cont) )
-        numFNAC += cont
-    elif labelAmazon:
-        print( "{0}\t{1}\tSe vende en Amazon".format(prev_key, cont) )
-        numAmazon += cont
+    if numAmazon > numFNAC:
+        best = 'Amazon'
+    else:
+        best = 'FNAC'
 
 print ("\nEjemplares vendidos de los libros que se venden en FNAC: {0}".format(numFNAC))
 print ("Ejemplares vendidos de los libros que se venden en Amazon: {0}".format(numAmazon))
+print ("La mejor seleccion de libros la hace: {0}".format(best))
