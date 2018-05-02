@@ -163,7 +163,7 @@ int main(){
 
 	start=clock();
 
-	dim3 blocks(1024/32,1024/32);   // blocks per grid
+	dim3 blocks(32,32);   			// blocks per grid
 	dim3 threads(32,32);            // threads per block
 
 	for (int niter=0; niter<NUM_ITER; niter++) {
