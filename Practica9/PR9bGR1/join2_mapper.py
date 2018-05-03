@@ -18,6 +18,6 @@ for line in sys.stdin:
 
     if (re.match(r'^[A-Za-z]+$', value)):
         if value=='Amazon' or value=='FNAC':
-            print( '%s\t%s' % (key, value) )
+            print( '%s,%s' % (key, value) )
     else:
-        print( '%s\t%s' % (key, value) )
+        print( '%s,%s' % (key, value) )

@@ -25,7 +25,7 @@ best = ""
 
 for line in sys.stdin:
     line       = line.strip()
-    key_value  = line.split('\t')
+    key_value  = line.split(',')
     curr_key  = key_value[0]
     value   = key_value[1]
 
@@ -41,12 +41,12 @@ for line in sys.stdin:
 
     elif prev_key: #existe prev_key
         if labelFNAC and labelAmazon: #Comprueba a que librería hace referencia y lo indica en el print
-            print( "{0}\t{1}\tSe vende en FNAC y Amazon".format(prev_key, cont) )
+            print( "{0},{1},Se vende en FNAC y Amazon".format(prev_key, cont) )
         elif labelFNAC:
-            print( "{0}\t{1}\tSe vende en FNAC".format(prev_key, cont) )
+            print( "{0},{1},Se vende en FNAC".format(prev_key, cont) )
             numFNAC += cont
         elif labelAmazon:
-            print( "{0}\t{1}\tSe vende en Amazon".format(prev_key, cont) )
+            print( "{0},{1},Se vende en Amazon".format(prev_key, cont) )
             numAmazon += cont
 
         #Resetear valores
