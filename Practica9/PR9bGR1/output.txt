@@ -1,0 +1,66 @@
+Una_Aventura_Grande,52819,Se vende en FNAC	
+Una_Aventura_Impactante,51233,Se vende en FNAC y Amazon	
+Una_Aventura_Increíble,48700,Se vende en FNAC y Amazon	
+Una_Aventura_Magnífica,53148,Se vende en FNAC y Amazon	
+Una_Aventura_Mortal,50652,Se vende en Amazon	
+Una_Aventura_Salvaje,50629,Se vende en FNAC y Amazon	
+Una_Aventura_Triste,49580,Se vende en FNAC y Amazon	
+Una_Bahía_Grande,49186,Se vende en FNAC y Amazon	
+Una_Bahía_Impactante,45589,Se vende en FNAC y Amazon	
+Una_Bahía_Increíble,50809,Se vende en FNAC y Amazon	
+Una_Bahía_Magnífica,48609,Se vende en FNAC y Amazon	
+Una_Bahía_Mortal,49206,Se vende en FNAC y Amazon	
+Una_Bahía_Salvaje,48500,Se vende en FNAC y Amazon	
+Una_Bahía_Triste,48231,Se vende en FNAC y Amazon	
+Una_Bienvenida_Grande,49429,Se vende en Amazon	
+Una_Bienvenida_Impactante,46905,Se vende en FNAC y Amazon	
+Una_Bienvenida_Increíble,47439,Se vende en FNAC y Amazon	
+Una_Bienvenida_Magnífica,45516,Se vende en FNAC y Amazon	
+Una_Bienvenida_Mortal,51001,Se vende en FNAC y Amazon	
+Una_Bienvenida_Salvaje,51832,Se vende en FNAC y Amazon	
+Una_Bienvenida_Triste,46523,Se vende en FNAC y Amazon	
+Una_Catedral_Grande,53378,Se vende en FNAC y Amazon	
+Una_Catedral_Impactante,55181,Se vende en FNAC y Amazon	
+Una_Catedral_Increíble,47078,Se vende en FNAC y Amazon	
+Una_Catedral_Magnífica,50604,Se vende en FNAC y Amazon	
+Una_Catedral_Mortal,49166,Se vende en FNAC y Amazon	
+Una_Catedral_Salvaje,50670,Se vende en FNAC y Amazon	
+Una_Catedral_Triste,49222,Se vende en FNAC y Amazon	
+Una_Decepción_Grande,47412,Se vende en FNAC y Amazon	
+Una_Decepción_Impactante,47109,Se vende en FNAC y Amazon	
+Una_Decepción_Increíble,47612,Se vende en FNAC y Amazon	
+Una_Decepción_Magnífica,45460,Se vende en FNAC y Amazon	
+Una_Decepción_Mortal,50784,Se vende en FNAC y Amazon	
+Una_Decepción_Salvaje,47978,Se vende en FNAC y Amazon	
+Una_Decepción_Triste,50603,Se vende en FNAC y Amazon	
+Una_Isla_Grande,49794,Se vende en FNAC y Amazon	
+Una_Isla_Impactante,48165,Se vende en FNAC y Amazon	
+Una_Isla_Increíble,49038,Se vende en FNAC y Amazon	
+Una_Isla_Magnífica,51194,Se vende en FNAC y Amazon	
+Una_Isla_Mortal,48120,Se vende en FNAC y Amazon	
+Una_Isla_Salvaje,47554,Se vende en FNAC y Amazon	
+Una_Isla_Triste,48477,Se vende en FNAC y Amazon	
+Una_Mirada_Grande,47444,Se vende en FNAC y Amazon	
+Una_Mirada_Impactante,49400,Se vende en Amazon	
+Una_Mirada_Increíble,55680,Se vende en FNAC y Amazon	
+Una_Mirada_Magnífica,51668,Se vende en FNAC y Amazon	
+Una_Mirada_Mortal,45833,Se vende en FNAC y Amazon	
+Una_Mirada_Salvaje,51779,Se vende en FNAC y Amazon	
+Una_Mirada_Triste,52671,Se vende en FNAC y Amazon	
+Una_Playa_Grande,47273,Se vende en FNAC y Amazon	
+Una_Playa_Impactante,50504,Se vende en FNAC	
+Una_Playa_Increíble,55350,Se vende en FNAC y Amazon	
+Una_Playa_Magnífica,50804,Se vende en FNAC y Amazon	
+Una_Playa_Mortal,53042,Se vende en FNAC y Amazon	
+Una_Playa_Salvaje,53206,Se vende en FNAC y Amazon	
+Una_Playa_Triste,53140,Se vende en FNAC y Amazon	
+Una_Sierra_Grande,47773,Se vende en FNAC y Amazon	
+Una_Sierra_Impactante,49004,Se vende en FNAC y Amazon	
+Una_Sierra_Increíble,50083,Se vende en FNAC y Amazon	
+Una_Sierra_Magnífica,45633,Se vende en FNAC y Amazon	
+Una_Sierra_Mortal,49202,Se vende en FNAC y Amazon	
+Una_Sierra_Salvaje,50548,Se vende en FNAC y Amazon	
+	
+Ejemplares vendidos de los libros que se venden en FNAC: 103323	
+Ejemplares vendidos de los libros que se venden en Amazon: 149481	
+La mejor seleccion de libros la hace: Amazon	
