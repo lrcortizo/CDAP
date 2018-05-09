@@ -25,54 +25,28 @@ __device__ double atomicAddD(double* address, double val)
 }
 
 __global__ void asteroid(double * gpu_x, double * gpu_y, double * gpu_vx, double * gpu_vy, double * gpu_m, double * gpu_x_new, double * gpu_y_new, double * gpu_vx_new, double * gpu_vy_new, int noOfObjects){
-	int i = threadIdx.x;     // local or register
+	int posx = blockIdx.x * 32 + threadIdx.x;
+	int posy = blockIdx.y * 32 + threadIdx.y;
 
-    int posx = blockIdx.x * 32 + threadIdx.x;
-    int posy = blockIdx.y * 32 + threadIdx.y;
+	double ax_total=0;
+	double ay_total=0;
+	double d = sqrt(pow( (gpu_x[posx]-gpu_x[posy]),2.0) + pow( (gpu_y[posx]-gpu_y[posy]),2.0));
+	double f = G*gpu_m[posx]*gpu_m[posy]/pow(d,2.0);
+	double fx = f*(gpu_x[posy]-gpu_x[posx])/d;
+	double ax = fx/gpu_m[posx];
+	double fy = f*(gpu_y[posy]-gpu_y[posx])/d;
+	double ay = fy/gpu_m[posx];
 
-	// printf("Object %d: %d, %d\n", i, gpu_x[i], gpu_y[i]);
+	ax_total += ax;
+	ay_total += ay;
+	if(posx == 550)
+	printf("Object: %d -- (%f,%f)\n", posx, ax, ay);
 
-	if (i < noOfObjects) {
-		gpu_x_new[i]=gpu_x[i];
-		gpu_y_new[i]=gpu_y[i];
-		gpu_vx_new[i]=gpu_vx[i];
-		gpu_vy_new[i]=gpu_vy[i];
-	}
+	atomicAddD(&gpu_vx_new[posx], ax_total);
+	atomicAddD(&gpu_vy_new[posx], ay_total);
 
-	if (i < noOfObjects) {
-		double ax_total=0;
-		double ay_total=0;
-		for (int j=0; j < noOfObjects; j++) {
-			if (i==j)
-				continue;
-
-			double d = sqrt(pow( (gpu_x[i]-gpu_x[j]),2.0) + pow((gpu_y[i]-gpu_y[j]),2.0));
-			double f = G*gpu_m[i]*gpu_m[j]/pow(d,2.0);
-			double fx = f*(gpu_x[j]-gpu_x[i])/d;
-			double ax = fx/gpu_m[i];
-			double fy = f*(gpu_y[j]-gpu_y[i])/d;
-			double ay = fy/gpu_m[i];
-
-			ax_total += ax;
-			ay_total += ay;
-
-		}
-
-		atomicAddD(&gpu_vx_new[i], ax_total);
-		atomicAddD(&gpu_vy_new[i], ay_total);
-
-		atomicAddD(&gpu_x_new[i], gpu_vx_new[i]);
-		atomicAddD(&gpu_y_new[i], gpu_vy_new[i]);
-
-	}       // noOfObjects
-	printf("Object %d: %d, %d\n", i, gpu_x[i], gpu_y[i]);
-
-	if (i < noOfObjects) {
-		gpu_x[i]=gpu_x_new[i];
-		gpu_y[i]=gpu_y_new[i];
-		gpu_vx[i]=gpu_vx_new[i];
-		gpu_vy[i]=gpu_vy_new[i];
-	}
+	atomicAddD(&gpu_x_new[posx], posx);
+	atomicAddD(&gpu_y_new[posx], posy);
 }
 
 int main(){
@@ -97,17 +71,10 @@ int main(){
 	double *vy = (double *) malloc(ARRAY_BYTES);
 	double *m = (double *) malloc(ARRAY_BYTES);
 
-	double *x0 = (double *) malloc(ARRAY_BYTES);
-	double *y0 = (double *) malloc(ARRAY_BYTES);
-	double *vx0 = (double *) malloc(ARRAY_BYTES);
-	double *vy0 = (double *) malloc(ARRAY_BYTES);
-
 	double *x_new = (double *) malloc(ARRAY_BYTES);
 	double *y_new = (double *) malloc(ARRAY_BYTES);
 	double *vx_new = (double *) malloc(ARRAY_BYTES);
 	double *vy_new = (double *) malloc(ARRAY_BYTES);
-
-	printf("\n");
 
 	// declare GPU memory pointers
 	double * gpu_x;
@@ -120,25 +87,6 @@ int main(){
 	double * gpu_vx_new;
 	double * gpu_vy_new;
 
-	// launch the kernel
-	for (i=0; i < noOfObjects; i++) {
-		fscanf(file,"%s",str);
-		x[i] = atof(str);
-		x0[i] = atof(str);
-		fscanf(file,"%s",str);
-		y[i] = atof(str);
-		y0[i] = atof(str);
-		fscanf(file,"%s",str);
-		vx[i] = atof(str);
-		vx0[i] = atof(str);
-		fscanf(file,"%s",str);
-		vy[i] = atof(str);
-		vy0[i] = atof(str);
-		fscanf(file,"%s",str);
-		m[i] = atof(str);
-	}
-	fclose(file);
-
 	// allocate GPU memory
 	cudaMalloc((void**) &gpu_x, ARRAY_BYTES);
 	cudaMalloc((void**) &gpu_y, ARRAY_BYTES);
@@ -149,6 +97,25 @@ int main(){
 	cudaMalloc((void**) &gpu_y_new, ARRAY_BYTES);
 	cudaMalloc((void**) &gpu_vx_new, ARRAY_BYTES);
 	cudaMalloc((void**) &gpu_vy_new, ARRAY_BYTES);
+
+	// launch the kernel
+	for (i=0; i < noOfObjects; i++) {
+		fscanf(file,"%s",str);
+		x[i] = atof(str);
+		x_new[i] = atof(str);
+		fscanf(file,"%s",str);
+		y[i] = atof(str);
+		y_new[i] = atof(str);
+		fscanf(file,"%s",str);
+		vx[i] = atof(str);
+		vx_new[i] = atof(str);
+		fscanf(file,"%s",str);
+		vy[i] = atof(str);
+		vy_new[i] = atof(str);
+		fscanf(file,"%s",str);
+		m[i] = atof(str);
+	}
+	fclose(file);
 
 	// transfer the array to the GPU
 	cudaMemcpy(gpu_x, x, ARRAY_BYTES, cudaMemcpyHostToDevice);
@@ -163,13 +130,12 @@ int main(){
 
 	start=clock();
 
-	dim3 blocks(32,32);   			// blocks per grid
-	dim3 threads(32,32);            // threads per block
+	dim3 blocksPerGrid(32,32);              // blocks per grid
+	dim3 threadsPerBlock(32,32);            // threads per block
 
 	for (int niter=0; niter<NUM_ITER; niter++) {
 
-		// Call to function
-		asteroid<<<blocks, threads>>>(gpu_x, gpu_y, gpu_vx, gpu_vy, gpu_m, gpu_x_new, gpu_y_new, gpu_vx_new, gpu_vy_new, noOfObjects);
+		asteroid<<<blocksPerGrid, threadsPerBlock>>>(gpu_x, gpu_y, gpu_vx, gpu_vy, gpu_m, gpu_x_new, gpu_y_new, gpu_vx_new, gpu_vy_new, noOfObjects);
 
 		if (niter%NUM_ITER_SHOW == 0)
 			printf("Iteration %d/%d\n", niter, NUM_ITER);
@@ -191,9 +157,11 @@ int main(){
 	file = fopen( RESULTSFILE, "w");
 	fprintf(file, "Movement of objects\n");
 	fprintf(file, "-------------------\n");
-	for (i=0; i<noOfObjects; i++) {
-		double mov = sqrt(pow( (x0[i]-x[i]),2.0) + pow( (y0[i]-y[i]),2.0));
-		fprintf(file,"  Object %i  -  %f meters\n", i, mov);
+	for (i = 0; i < noOfObjects; i++) {
+		double mov = sqrt(pow( (x_new[i]-x[i]),2.0) + pow( (y_new[i]-y[i]),2.0));
+		// printf("  Object %i  - ORIGINAL: (%f,%f) -- NEW: (%f,%f) -> %f meters\n", i, x[i], y[i], x_new[i], y_new[i], mov);
+		fprintf(file,"  Object %i  - ORIGINAL: (%f,%f) -- NEW: (%f,%f) -> %f meters\n", i, x[i], y[i], x_new[i], y_new[i], mov);
+
 	}
 	int hours = NUM_ITER/3600;
 	int mins = (NUM_ITER - hours*3600)/60;
@@ -203,13 +171,7 @@ int main(){
 	time_used = ((double)(end-start)) / CLOCKS_PER_SEC;
 	fprintf(file,"Processing time: %f sec.\n",time_used);
 	fclose(file);
-	// // copy back the result array to the CPU
-	// cudaMemcpy(h_out, d_out, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-	// // print out the resulting array
-	// for (int i =0; i < ARRAY_SIZE; i++) {
-	// printf("%f", h_out[i]);
-	// printf(((i % 4) != 3) ? "\t" : "\n");
-	// }
+
 	cudaFree(gpu_x);
 	cudaFree(gpu_y);
 	cudaFree(gpu_vx);
