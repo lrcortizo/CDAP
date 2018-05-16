@@ -24,29 +24,30 @@ __device__ double atomicAddD(double* address, double val)
 	return __longlong_as_double(old);
 }
 
-__global__ void asteroid(double * gpu_x, double * gpu_y, double * gpu_vx, double * gpu_vy, double * gpu_m, double * gpu_x_new, double * gpu_y_new, double * gpu_vx_new, double * gpu_vy_new, int noOfObjects){
-	int posx = blockIdx.x * 32 + threadIdx.x;
-	int posy = blockIdx.y * 32 + threadIdx.y;
+__global__ void asteroid(double * gpu_x, double * gpu_y, double * gpu_vx, double * gpu_vy, double * gpu_m){
+	int posx = blockIdx.x * blockDim.x + threadIdx.x;
+	int posy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	double ax_total=0;
-	double ay_total=0;
-	double d = sqrt(pow( (gpu_x[posx]-gpu_x[posy]),2.0) + pow( (gpu_y[posx]-gpu_y[posy]),2.0));
-	double f = G*gpu_m[posx]*gpu_m[posy]/pow(d,2.0);
-	double fx = f*(gpu_x[posy]-gpu_x[posx])/d;
-	double ax = fx/gpu_m[posx];
-	double fy = f*(gpu_y[posy]-gpu_y[posx])/d;
-	double ay = fy/gpu_m[posx];
+	if (posx!=posy) {
+		double d = sqrt(pow( (gpu_x[posx]-gpu_x[posy]),2.0) + pow( (gpu_y[posx]-gpu_y[posy]),2.0));
+		double f = G*gpu_m[posx]*gpu_m[posy]/pow(d,2.0);
+		double fx = f*(gpu_x[posy]-gpu_x[posx])/d;
+		double fy = f*(gpu_y[posy]-gpu_y[posx])/d;
+		double ax = fx/gpu_m[posx];
+		double ay = fy/gpu_m[posx];
+		// atomicAddD(gpu_vx+posx, ax);
+		// atomicAddD(gpu_vy+posx, ay);
+		atomicAddD(&gpu_vx[posx], ax);
+		atomicAddD(&gpu_vy[posx], ay);
+	}
+}
 
-	ax_total += ax;
-	ay_total += ay;
-	if(posx == 550)
-	printf("Object: %d -- (%f,%f)\n", posx, ax, ay);
-
-	atomicAddD(&gpu_vx_new[posx], ax_total);
-	atomicAddD(&gpu_vy_new[posx], ay_total);
-
-	atomicAddD(&gpu_x_new[posx], posx);
-	atomicAddD(&gpu_y_new[posx], posy);
+__global__ void positions(double * gpu_x, double * gpu_y, double * gpu_vx, double * gpu_vy, double * gpu_m){
+	int i = blockIdx.x * blockIdx.x + threadIdx.x;
+	// gpu_x[i] += gpu_vx[i];
+	// gpu_y[i] += gpu_vy[i];
+	atomicAddD(&gpu_x[i], gpu_vx[i]);
+	atomicAddD(&gpu_y[i], gpu_vy[i]);
 }
 
 int main(){
@@ -123,19 +124,16 @@ int main(){
 	cudaMemcpy(gpu_vx, vx, ARRAY_BYTES, cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_vy, vy, ARRAY_BYTES, cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_m, m, ARRAY_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_x_new, x_new, ARRAY_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_y_new, y_new, ARRAY_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_vx_new, vx_new, ARRAY_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_vy_new, vy_new, ARRAY_BYTES, cudaMemcpyHostToDevice);
 
 	start=clock();
 
 	dim3 blocksPerGrid(32,32);              // blocks per grid
 	dim3 threadsPerBlock(32,32);            // threads per block
 
-	for (int niter=0; niter<NUM_ITER; niter++) {
+	for (int niter=0; niter<=NUM_ITER; niter++) {
 
-		asteroid<<<blocksPerGrid, threadsPerBlock>>>(gpu_x, gpu_y, gpu_vx, gpu_vy, gpu_m, gpu_x_new, gpu_y_new, gpu_vx_new, gpu_vy_new, noOfObjects);
+		asteroid<<<blocksPerGrid, threadsPerBlock>>>(gpu_x, gpu_y, gpu_vx, gpu_vy, gpu_m);
+		positions<<<1, 1024>>>(gpu_x, gpu_y, gpu_vx, gpu_vy, gpu_m);
 
 		if (niter%NUM_ITER_SHOW == 0)
 			printf("Iteration %d/%d\n", niter, NUM_ITER);
@@ -149,10 +147,6 @@ int main(){
 	cudaMemcpy(vx, gpu_vx, ARRAY_BYTES, cudaMemcpyDeviceToHost);
 	cudaMemcpy(vy, gpu_vy, ARRAY_BYTES, cudaMemcpyDeviceToHost);
 	cudaMemcpy(m, gpu_m, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-	cudaMemcpy(x_new, gpu_x_new, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-	cudaMemcpy(y_new, gpu_y_new, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-	cudaMemcpy(vx_new, gpu_vx_new, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-	cudaMemcpy(vy_new, gpu_vy_new, ARRAY_BYTES, cudaMemcpyDeviceToHost);
 
 	file = fopen( RESULTSFILE, "w");
 	fprintf(file, "Movement of objects\n");
