@@ -25,18 +25,16 @@ def main(sc, libreria):
 
     nums_joined_books = nums_joined_books.reduceByKey(sum_counts).collect()
 
-    # Map the total delay to the airline (joined using the broadcast value)
-    #counts = nums.map(lambda b: (book_lookup.value[b.book], b.count))
-    # Reduce the total delay for the month to the airline
-    #counts = counts.reduceByKey(sum_counts).collect()
-    #counts = sorted(counts, key=itemgetter(1))
     total = 0
+    f = open('output.txt', 'w')
     for entry in nums_joined_books:
         print "%s: %s" % (entry[0], entry[1][0])
+        f.write("%s: %s\n" % (entry[0], entry[1][0]))
         total = total + entry[1][0]
-            # Show a bar chart of the delays
-            #plot(delays)
     print "TOTAL: %s" % (total)
+    f.write("TOTAL: %s" % (total))
+
+    f.close()
 
 # Configure Spark
 
