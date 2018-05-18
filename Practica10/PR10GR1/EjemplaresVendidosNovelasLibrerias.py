@@ -1,7 +1,7 @@
 def split_fileBook(line):
     (book,store) = line.split(',')
     if store == libreria:
-        return (book, store)
+        return (book, 0)
     else:
         return ("", "")
 
@@ -13,16 +13,16 @@ def split_fileNum(line):
 def sum_counts(a, b):
     return a + b
 
-def main(sc, libreria):
-    # Load the books lookup dictionary
+def main(sc):
+    # Se carga el diccionario de books
     books = sc.textFile("join2_book*.txt").map(split_fileBook)
-    # Broadcast the lookup dictionary to the cluster
-    #book_lookup = sc.broadcast(books)
 
-    # Load the nums lookup dictionary
+    # Se carga el diccionario de nums
     nums = sc.textFile("join2_num*.txt").map(split_fileNum)
+    #Se hace el join de ambas tuplas a traves del atributo comun 'book'
     nums_joined_books = nums.join(books)
 
+    #Se hace el reduce acumulando la suma de libros vendidos para los que tienen el mismo nombre
     nums_joined_books = nums_joined_books.reduceByKey(sum_counts).collect()
 
     total = 0
@@ -42,8 +42,12 @@ from pyspark import SparkContext
 sc = SparkContext(appName="novelasLibrerias")
 sc.setLogLevel("WARN")
 import sys
+
+if len(sys.argv) != 2:
+    sys.exit("Es necesario especificar una libreria")
+
 libreria = sys.argv[1]
 print ("Obteniendo ventas de novelas ofrecidas por "+libreria)
 
 # Execute Main functionality
-main(sc, libreria)
+main(sc)
